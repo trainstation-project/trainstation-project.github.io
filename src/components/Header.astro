@@ -1,0 +1,19 @@
+---
+import { site } from '../site.config';
+import ThemeToggle from './ThemeToggle.astro';
+---
+
+<header class="site-header" aria-label="Site header">
+  {/*
+  <a class="site-brand" href="/" aria-label={`${site.brand} home`}>
+    <span class="brand-name">{site.brand}</span>
+    <span class="brand-tagline">{site.tagline}</span>
+  </a>
+  */}
+  <div class="site-header-right">
+    <nav class="site-nav" aria-label="Primary navigation">
+      {site.nav.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+    <ThemeToggle />
+  </div>
+</header>

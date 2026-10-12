@@ -1,0 +1,13 @@
+---
+// Inline cross-reference to a numbered heading (h1-h3) elsewhere on the page.
+// Like FigRef, it renders a placeholder link that the page-level script in
+// PostLayout.astro resolves to "Section N.M", using the same numbering as the
+// CSS heading counters in global.css.
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<a class="fig-ref" href={`#${id}`} data-sec-ref={id}>Section ?</a>

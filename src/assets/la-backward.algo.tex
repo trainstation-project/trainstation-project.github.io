@@ -1,0 +1,26 @@
+\caption{Linear-attention backward: the state-passing kernel walks the sequence forward, the gradient kernel walks it in reverse. One Pallas program per batch element; decay ratios of $F$ as in \AlgRef{alg-la-forward}.}
+\begin{algorithmic}
+\REQUIRE $\mathbf{Q}, \mathbf{K}, \mathbf{V}$, the gate $\log f$, $\mathbf{H}_0$, $\nabla_{\mathbf{Y}}\mathcal{L}$, $\nabla_{\mathbf{H}_S}\mathcal{L}$
+\ENSURE $\nabla_{\mathbf{Q}}\mathcal{L}, \nabla_{\mathbf{K}}\mathcal{L}, \nabla_{\mathbf{V}}\mathcal{L}, \nabla_{\log f}\mathcal{L}, \nabla_{\mathbf{H}_0}\mathcal{L}$
+\Statex \textit{state-passing kernel}
+\STATE load $\mathbf{H}_0$
+\FOR{chunk $i = 0, \ldots, S/C - 1$}
+\STATE write $\mathbf{H}_{iC}$ to HBM (bf16) \COMMENT{the state at the start of every chunk}
+\STATE $\mathbf{H}_{(i+1)C} \gets \mathrm{diag}\!\left(\frac{F_{(i+1)C}}{F_{iC}}\right) \mathbf{H}_{iC} + \left(\mathbf{K}_{[i]} \odot \frac{F_{(i+1)C}}{\boldsymbol F_{[i]}}\right)^\top \mathbf{V}_{[i]}$
+\ENDFOR
+\Statex \textit{gradient kernel}
+\STATE load $\nabla_{\mathbf{H}_S}\mathcal{L}$ \COMMENT{fp32 $(N, K, V)$ VMEM scratch holding $\nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L}$}
+\FOR{chunk $i = S/C - 1, \ldots, 0$ (reverse)}
+\FOR{each group of $G$ heads}
+\STATE load $\mathbf{Q}_{[i]}, \mathbf{K}_{[i]}, \mathbf{V}_{[i]}, \mathbf{H}_{iC}$ and $\nabla_{\mathbf{Y}_{[i]}}\mathcal{L}$
+\STATE recompute the masked, decayed $\mathbf{P}$ of \AlgRef{alg-la-forward}
+\STATE $\nabla_{\mathbf{V}_{[i]}}\mathcal{L} \gets \mathbf{P}^\top \nabla_{\mathbf{Y}_{[i]}}\mathcal{L} + \left(\mathbf{K}_{[i]} \odot \frac{F_{(i+1)C}}{\boldsymbol F_{[i]}}\right) \nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L}$
+\STATE $\nabla_{\mathbf{Q}_{[i]}}\mathcal{L} \gets \left(\nabla_{\mathbf{Y}_{[i]}}\mathcal{L}\, \mathbf{H}_{iC}^\top\right) \odot \frac{\boldsymbol F_{[i]}}{F_{iC}}$, $\nabla_{\mathbf{K}_{[i]}}\mathcal{L} \gets \left(\mathbf{V}_{[i]} \left(\nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L}\right)^\top\right) \odot \frac{F_{(i+1)C}}{\boldsymbol F_{[i]}}$ \COMMENT{through the carried states}
+\STATE $\nabla_{\mathbf{H}_{iC}}\mathcal{L} \gets \mathrm{diag}\!\left(\frac{F_{(i+1)C}}{F_{iC}}\right) \nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L} + \left(\mathbf{Q}_{[i]} \odot \frac{\boldsymbol F_{[i]}}{F_{iC}}\right)^\top \nabla_{\mathbf{Y}_{[i]}}\mathcal{L}$ \COMMENT{handed on to chunk $i - 1$}
+\STATE $\nabla_{\mathbf{P}}\mathcal{L} \gets \left(\nabla_{\mathbf{Y}_{[i]}}\mathcal{L}\, \mathbf{V}_{[i]}^\top\right) \odot \mathbf{M}_C$ \COMMENT{scalar gate: $\odot\,\mathbf{D}$}
+\STATE $\nabla_{\mathbf{Q}_{[i]}}\mathcal{L} \mathrel{+}= \nabla_{\mathbf{P}}\mathcal{L}\, \mathbf{K}_{[i]}$, $\nabla_{\mathbf{K}_{[i]}}\mathcal{L} \mathrel{+}= \left(\nabla_{\mathbf{P}}\mathcal{L}\right)^\top \mathbf{Q}_{[i]}$ \COMMENT{diagonal gate: through $\mathbf{K}_{[i]} \odot \frac{F_{iC}}{\boldsymbol F_{[i]}}$ and $\mathbf{Q}_{[i]} \odot \frac{\boldsymbol F_{[i]}}{F_{iC}}$}
+\STATE gated: $\nabla_{\log \mathbf{f}_{[i]}}\mathcal{L} \gets \mathbf{U}_C \left( \mathbf{Q}_{[i]} \odot \nabla_{\mathbf{Q}_{[i]}}\mathcal{L} - \mathbf{K}_{[i]} \odot \nabla_{\mathbf{K}_{[i]}}\mathcal{L} \right) + $ chunk-total term \COMMENT{$\mathbf{U}_C$: upper-triangular suffix sum}
+\ENDFOR
+\ENDFOR
+\RETURN the gradients, with $\nabla_{\mathbf{H}_0}\mathcal{L}$ the final scratch
+\end{algorithmic}

@@ -1,0 +1,12 @@
+---
+// Inline cross-reference to an <Algorithm id="..."> elsewhere on the page.
+// Like FigRef, it renders a placeholder link that the page-level script in
+// PostLayout.astro resolves to the algorithm's number in document order.
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<a class="fig-ref" href={`#${id}`} data-algo-ref={id}>Algorithm ?</a>

@@ -1,0 +1,409 @@
+---
+title: 'FLAT: Flash Linear Attention on TPUs'
+description: 'Pallas kernels for Linear Attention, Mamba-2 and GLA, and the short causal convolution before them, on TPU v6e.'
+authors:
+  - name: 'Mayank Mishra'
+    url: https://mayank31398.github.io/
+    affiliations: [1, 2]
+  - name: 'Zhonglin Han'
+    url: https://x.com/ZhonglinHan_
+    affiliations: [2]
+  - name: 'Percy Liang'
+    url: https://cs.stanford.edu/~pliang/
+    affiliations: [3]
+  - name: 'Ion Stoica'
+    url: 'https://people.eecs.berkeley.edu/~istoica/'
+    affiliations: [1]
+  - name: 'Tri Dao'
+    url: 'https://tridao.me/'
+    affiliations: [4, 5]
+  - name: 'Rishabh Iyer'
+    url: https://rishabh246.github.io/
+    affiliations: [1]
+  - name: 'Joseph E. Gonzalez'
+    url: https://people.eecs.berkeley.edu/~jegonzal/
+    affiliations: [1]
+affiliations:
+  - 'UC Berkeley'
+  - 'Learning Machine'
+  - 'Stanford University'
+  - 'Princeton University'
+  - 'Together AI'
+citationStyle: 'numeric'
+---
+
+import Figure from '../../components/Figure.astro';
+import FigRef from '../../components/FigRef.astro';
+import Algorithm from '../../components/Algorithm.astro';
+import AlgRef from '../../components/AlgRef.astro';
+import SecRef from '../../components/SecRef.astro';
+import TikzFigure from '../../components/TikzFigure.astro';
+import Sidenote from '../../components/Sidenote.astro';
+import tikzSource from '../../assets/rnn-block-diagram.tikz?raw';
+import laForwardAlgo from '../../assets/la-forward.algo.tex?raw';
+import laBackwardAlgo from '../../assets/la-backward.algo.tex?raw';
+import {
+  RooflineChart,
+  XlaCompareFwdChart,
+  XlaCompareBwdChart,
+} from '../../components/figures/DwcCharts.tsx';
+import {
+  LaSpeedChart,
+  LaStatePassingChart,
+  LaBwdCoreChart,
+  LaLayerOpsChart,
+  LaH100Chart,
+} from '../../components/figures/LaCharts.tsx';
+
+# Introduction
+While the Transformer architecture[^attention] has gained immense adoption, recent production LLMs have adopted variants of Linear Attention[^linearattention]: Kimi K3[^k3] uses Kimi Delta Attention[^kda], and Qwen 3.5[^qwen-3.5] interleaves Gated DeltaNet[^gdn] layers with full attention. A linear attention layer replaces attention's KV-cache, which grows with the context, with a fixed-size recurrent state, so generating a token takes constant time and memory and training costs $O(T)$ in the context length $T$.
+
+GPUs have fast kernels for these layers, such as [FLA (flash-linear-attention)](https://github.com/fla-org/flash-linear-attention) and [Mamba's CUDA kernels](https://github.com/state-spaces/mamba). Google's TPUs[^tpu2][^tpu4] do not: recent TPU work targets inference[^tpu-megakernels][^flywheel], and we know of no open-source kernels for training these layers on TPUs. We release [FLAT: Flash Linear Attention on TPUs](https://github.com/open-lm-engine/accelerated-model-architectures), Pallas implementations of Linear Attention[^linearattention], Mamba-2[^mamba2], and Gated Linear Attention (GLA)[^gla] for TPUs, benchmarked on a [TPU v6e (Trillium) chip](https://docs.cloud.google.com/tpu/docs/v6e). We also release a fast Pallas kernel for the short causal convolution that most linear attention layers apply before the recurrence. Counting the forward and backward together, FLAT on one TPU v6e chip is up to $3\times$ faster than FLA on an NVIDIA H100 (<FigRef id="fig-la-h100" full />): 1,982 µs against 6,106 µs for GLA, $1.6\times$ faster for Linear Attention and $1.5\times$ faster for Mamba-2. We use these kernels to train [Rigel](https://open-lm-engine.github.io/blog/rigel/)[^mishra2026rigel] on TPU chips.
+
+We aim to release training kernels for DeltaNet[^deltanet], Gated DeltaNet[^gdn] and Kimi Delta Attention[^kda] soon.
+
+<Figure id="fig-la-h100">
+  <LaH100Chart client:visible />
+  <span slot="caption">Device time of every kernel in the forward and the backward (lighter shades) at $B{=}8, S{=}4096, N{=}16, K{=}V{=}128$ at bf16 precision colored by the role it plays: FLA on H100 vs FLAT on TPU v6e. FLA splits each pass into several kernels to keep the H100's 132 SMs busy, writing intermediate states to HBM and reading them back in both the forward and the backward. FLAT's forward is one kernel that keeps the state in VMEM; its backward is two kernels, one that recomputes the chunk states and one that computes the $q, k, v$ and gate gradients together.</span>
+</Figure>
+
+## GPUs vs TPUs
+**GPUs** are built from many streaming multiprocessors (SMs), 132 on an H100. Each SM runs many warps of SIMT threads and has tensor cores for matrix multiplies. Its hardware warp schedulers choose a ready warp every cycle, so when one warp stalls on memory, another runs in its place.
+
+**TPUs** are built around the **MXU**, a large systolic array for matrix multiplies. A v6e chip has one TensorCore with two $256 \times 256$ MXUs; everything else (elementwise math, reductions, data shuffling) runs on a vector unit, the **VPU**. There is no hardware scheduler: the compiler (XLA, or Mosaic for Pallas kernels) schedules the whole program ahead of time into a static VLIW instruction stream.
+
+#### How a TPU core runs a kernel
+Each cycle, a v6e TensorCore issues one instruction *bundle*<Sidenote>A bundle can be thought of as one wide instruction.</Sidenote> with fixed slots: scalar, vector ALU (VPU), transcendental (EUP), cross-lane (rotates, transposes, lane reductions), VMEM loads and stores, and the MXU. A separate DMA engine copies data between HBM and VMEM in the background. Nothing is reordered at runtime, so two pieces of work overlap only if the kernel exposes them as independent.
+1. **Registers are 2-D tiles**: a vector register is a grid of 8 sublanes × 128 lanes of 32-bit values (16 sublanes for packed `bf16`), and an array's last two dimensions are laid out onto that grid. A slice that starts on a 128-lane boundary costs nothing, because it is just a different register. Moving data between sublanes, where consecutive positions of the sequence sit, costs a rotate and a select for every register, and odd shifts of packed `bf16` need extra bit manipulation (6,341 such ops per grid step in our first convolution backward). This matters for our causal convolution kernels.
+2. **The MXU is weight-stationary**: one operand is loaded into the array and stays there while the other flows through it. A small matmul pays for that load and then does little work, so our kernels batch several heads into each dot.
+3. **Time is bundles, unless it is bytes**: a kernel that is not waiting on HBM runs for (bundles issued) × (clock). The first and final versions of our convolution backward issue 13,016 and 11,617 bundles per grid step; over 64 steps, both match their measured times (486.7 and 431.1 µs) at the same ~1.7 GHz. So the question for any kernel is which resource runs out first: HBM bandwidth, vector slots, store slots (register spills compete with real stores), or the MXU.
+
+#### Why linear attention is hard on a TPU
+GPU kernels for linear attention rely on hardware a TPU does not have, so they cannot simply be translated. The features above turn into three problems:
+- **The matmuls are small.** One head's chunk works on $C \times C$, $C \times V$ and $K \times V$ blocks, and each chunk's state depends on the previous one. Every block is small next to the MXU, and a weight-stationary array charges for loading each one. Our first kernels issued one dot per head and the MXU sat waiting; batching several heads into each dot fixed that.
+- **Everything else competes for vector slots.** The decay exponentials, the causal mask, the convolution and SiLU are all vector work, sharing each bundle's slots with loads, stores and register spills. A GPU overlaps such work with its tensor cores across many warps; on a TPU it adds straight to the bundle count. Our convolution backward was limited by exactly this, and Flywheel Attention[^flywheel] hits the same limit with softmax. Inferact's Kimi K3 megakernel[^tpu-megakernels] even had to spread residual adds and norms across chips at small batch sizes.
+- **The layout is chosen once.** Tiles and DMA windows align to fixed shapes, so a kernel must commit to where heads and positions live, and an input that arrives in another layout has to be copied first. In a full layer these copies cost us 1.8 ms per step (<SecRef id="full-linear-attention-layer" />).
+
+One property of the TPU works in our favor. A GPU kernel has to spread its work over many SMs, so FLA computes the chunk states in one kernel, writes them to HBM, and reads them back in a second kernel to produce the output. A v6e chip has a single core, and the kernel itself decides what stays in its VMEM, so our forward keeps the recurrent state in VMEM for the whole sequence and computes the states and the output in one kernel (<FigRef id="fig-la-h100" full />). Inferact's megakernel relies on the same property to prefetch the next layer's weights into VMEM while the current layer runs[^tpu-megakernels].
+
+## Benchmark Setup
+All our measurements are taken on a single TPU v6e chip and report device time. Per-op breakdowns sum each op's device time from an XProf trace.
+Unless stated otherwise, inputs and outputs are in `bf16`[^bf16], and accumulations and reductions are in `fp32`.
+
+We judge every kernel against the two ceilings of a roofline model[^roofline].
+- **Memory.** The v6e's HBM is rated at 1.638 TB/s, but the best a kernel can practically sustain is what `jnp.copy` achieves, which we time the same way: 1.46 TB/s, 89% of the rating. We report a kernel's bandwidth as the bytes it must read and write divided by its time. A kernel that streams several operands at once can slightly beat a single copy, reaching about 1.54 TB/s in our measurements.
+- **Compute.** Google publishes the MXU's peak, 918 `bf16` TFLOP/s, but not the VPU's. To measure the VPU's, we wrote a Pallas kernel that loads two tensors from HBM into VMEM, adds them 1,000,000 times and writes the result back. It reaches 7.091 TFLOP/s, which we use as the VPU peak.
+
+A kernel's arithmetic intensity, the FLOPs it does per byte it moves, decides which ceiling applies. On the MXU the crossover is about $918 / 1.638 \approx 560$ FLOP/byte, and on the VPU it is about $7.091 / 1.638 \approx 4.3$ FLOP/byte.
+
+# Linear Attention
+## Layer
+<Figure id="fig-layer">
+  <TikzFigure
+    source={tikzSource}
+    maxWidth="70%"
+    alt="Two-panel architecture diagram. Left: a residual block where the input is normed, passed through an M2RNN Layer, and added back via a residual connection, then normed again, passed through an MLP or MoE, and added back via a second residual connection. Right: the internal anatomy of the M2RNN Layer — three linear projections feed a stacked causal Conv1D for q, k, and v plus separate f and g gates; q, k, v, and f feed the recurrence, whose output is gated by g, RMSNorm'd, and linearly projected out."
+  />
+  <span slot="caption">The Linear Attention block (left): a residual stream alternating the sequence mixer with a gated MLP. Right: inside the mixer, $q_t, k_t, v_t$ each get their own depthwise causal convolution and activation before feeding the recurrence, whose output is gated by $g_t$, normalized and projected out.</span>
+</Figure>
+
+Most linear-attention layers (Mamba-1[^mamba1], Mamba-2[^mamba2], Gated DeltaNet[^gdn]) share this block: a residual stream alternating a recurrent mixer with an MLP. Inside the mixer, $q_t, k_t, v_t$ each go through a projection, a short depthwise causal convolution and SiLU; the output gate $g_t$ and the forget gate $f_t$ have their own projections. Everything except the recurrence is parallel over the sequence.
+
+## Forward Recurrence
+Linear Attention[^linearattention] has a recurrent form, used for autoregressive inference, with $q_t, k_t \in \mathbb{R}^{K}$, $v_t \in \mathbb{R}^{V}$ and state $\mathbf{H}_t \in \mathbb{R}^{K \times V}$:
+$$
+\begin{aligned}
+\mathbf{H}_t &= \mathbf{H}_{t-1} + k_t v_t^\top \\
+y_t &= \mathbf{H}_t^\top q_t
+\end{aligned}
+$$
+and a chunkwise form, used for training, that turns most of the work into matrix multiplies. With chunks of $C$ positions, $\mathbf{Q}_{[i]}, \mathbf{K}_{[i]}, \mathbf{V}_{[i]}$ the rows of chunk $i$, and $\mathbf{M}_C$ the $C \times C$ lower-triangular causal mask:
+$$ 
+\begin{aligned}
+\mathbf{H}_{(i+1)C} &= \mathbf{H}_{iC} + \mathbf{K}_{[i]}^\top \mathbf{V}_{[i]} \\
+\mathbf{Y}_{[i]} &= \mathbf{Q}_{[i]} \mathbf{H}_{iC} + \left( \mathbf{Q}_{[i]} \mathbf{K}_{[i]}^\top \odot \mathbf{M}_C \right) \mathbf{V}_{[i]}
+\end{aligned}
+$$
+
+RetNet[^retnet] adds a scalar forget gate to Linear Attention, a constant that does not depend on the input $x_t$. Mamba-2[^mamba2] reformulates the selective state-space model introduced by Mamba[^mamba1] as an instance of structured state-space duality (SSD), which expresses the SSM recurrence as a form of linear attention with a data-dependent, scalar state-transition gate. Gated Linear Attention (GLA)[^gla] goes further with a diagonal, channel-wise forget gate. The table lists the recurrent and chunkwise forms of each:
+
+<span id="linear-attention-forms" class="table-anchor" aria-hidden="true"></span>
+
+<div class="table-scroll">
+
+| Architecture | Recurrent form | Chunkwise parallel form |
+|---|---|---|
+| **Linear attention**[^linearattention] | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_t &= \mathbf{H}_{t-1} + k_t v_t^\top \\ y_t &= \mathbf{H}_t^\top q_t \end{aligned}$</span> | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_{(i + 1)C} &= \mathbf{H}_{iC} + \mathbf{K}_{[i]}^\top \mathbf{V}_{[i]} \\ \mathbf{Y}_{[i]} &= \mathbf{Q}_{[i]} \mathbf{H}_{iC} + \left( \mathbf{Q}_{[i]} \mathbf{K}_{[i]}^\top \odot \mathbf{M}_C \right) \mathbf{V}_{[i]} \end{aligned}$</span> |
+| **RetNet**[^retnet] | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_t &= f\,\mathbf{H}_{t-1} + k_t v_t^\top \\ y_t &= \mathbf{H}_t^\top q_t \end{aligned}$</span> | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_{(i + 1)C} &= f^C \mathbf{H}_{iC} + \mathbf{K}_{[i]}^\top \mathrm{diag}(f^{C-1}, \ldots, f, 1) \mathbf{V}_{[i]} \\ \mathbf{Y}_{[i]} &= \mathrm{diag}(f, f^2, \ldots, f^C) \mathbf{Q}_{[i]} \mathbf{H}_{iC} + \left(\mathbf{Q}_{[i]} \mathbf{K}_{[i]}^\top \odot \mathbf{L}_f\right) \mathbf{V}_{[i]} \end{aligned}$</span> |
+| **Mamba-2**[^mamba2] | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_t &= f_t\,\mathbf{H}_{t-1} + k_t v_t^\top \\ y_t &= \mathbf{H}_t^\top q_t \end{aligned}$</span> | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_{(i + 1)C} &= \frac{F_{(i + 1)C}}{F_{iC}} \mathbf{H}_{iC} + \mathbf{K}_{[i]}^\top \mathrm{diag}\left(\frac{F_{(i+1)C}}{F_{[i]}}\right) \mathbf{V}_{[i]} \\ \mathbf{Y}_{[i]} &= \mathrm{diag}\left(\frac{F_{[i]}}{F_{iC}}\right)\mathbf{Q}_{[i]} \mathbf{H}_{iC} + \left( \mathrm{diag}(F_{[i]}) \mathbf{Q}_{[i]} \mathbf{K}_{[i]}^\top \mathrm{diag}(F_{[i]}^{-1}) \odot \mathbf{M}_C \right) \mathbf{V}_{[i]} \end{aligned}$</span> |
+| **Gated Linear Attention**[^gla] | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_t &= \mathrm{diag}(f_t) \mathbf{H}_{t-1} + k_t v_t^\top \\ y_t &= \mathbf{H}_t^\top q_t \end{aligned}$</span> | <span class="table-math">$\displaystyle\begin{aligned} \mathbf{H}_{(i + 1)C} &= \mathrm{diag}\!\left(\frac{F_{(i + 1)C}}{F_{iC}}\right) \mathbf{H}_{iC} + \left(\mathbf{K}_{[i]} \odot \frac{F_{(i + 1)C}}{\boldsymbol F_{[i]}}\right)^\top \mathbf{V}_{[i]} \\ \mathbf{Y}_{[i]} &= \left(\mathbf{Q}_{[i]} \odot \frac{\boldsymbol F_{[i]}}{F_{iC}}\right) \mathbf{H}_{iC} + \left[\left(\mathbf{Q}_{[i]} \odot \boldsymbol F_{[i]}\right)\left(\mathbf{K}_{[i]} \odot \boldsymbol F_{[i]}^{-1}\right)^\top \odot \mathbf{M}_C\right] \mathbf{V}_{[i]} \end{aligned}$</span> |
+
+</div>
+
+**Notation**: $F_t = \prod_{s \le t} f_s$ is the cumulative decay (a scalar for Mamba-2, a vector for GLA), $\boldsymbol F_{[i]}$ stacks it over chunk $i$, and for RetNet $(\mathbf{L}_f)_{mn} = f^{m-n}$ for $m \ge n$ and 0 otherwise. Divisions are elementwise. RetNet is Mamba-2 with a constant gate, so it runs on the Mamba-2 kernels.
+
+On GPUs, FLA splits the forward into a state-passing kernel and an output kernel to expose enough parallelism for over a hundred SMs. A TPU chip has a single TensorCore, so we fuse both into one kernel.
+
+## Backward Recurrence
+Differentiating the recurrence gives a recurrence for the state gradient that runs backwards in time:
+$$
+\nabla_{\mathbf{H}_t} \mathcal{L} = \nabla_{\mathbf{H}_{t+1}} \mathcal{L} + q_t \left(\nabla_{y_t}\mathcal{L}\right)^\top, \qquad \nabla_{\mathbf{H}_{S+1}} \mathcal{L} = 0
+$$
+It has the same form as the forward recurrence, with $q_t$ and $\nabla_{y_t}\mathcal{L}$ in the roles of $k_t$ and $v_t$, so the backward of linear attention is itself a linear attention run in reverse. The input gradients read off the two states:
+$$
+\begin{aligned}
+\nabla_{q_t}\mathcal{L} &= \mathbf{H}_t \, \nabla_{y_t}\mathcal{L} \\
+\nabla_{k_t}\mathcal{L} &= (\nabla_{\mathbf{H}_t} \mathcal{L}) \, v_t \\
+\nabla_{v_t}\mathcal{L} &= (\nabla_{\mathbf{H}_t} \mathcal{L})^\top k_t
+\end{aligned}
+$$
+Chunkwise, with the chunks visited in reverse order $i = \lceil S/C \rceil{-}1, \ldots, 0$:
+$$
+\begin{aligned}
+\nabla_{\mathbf{H}_{iC}}\mathcal{L} &= \nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L} + \mathbf{Q}_{[i]}^\top \nabla_{\mathbf{Y}_{[i]}}\mathcal{L} \\
+\nabla_{\mathbf{Q}_{[i]}}\mathcal{L} &= \left(\nabla_{\mathbf{Y}_{[i]}}\mathcal{L}\right) \mathbf{H}_{iC}^\top + \left[ \left( \nabla_{\mathbf{Y}_{[i]}}\mathcal{L} \right) \mathbf{V}_{[i]}^\top \odot \mathbf{M}_C \right] \mathbf{K}_{[i]} \\
+\nabla_{\mathbf{K}_{[i]}}\mathcal{L} &= \mathbf{V}_{[i]} \left(\nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L}\right)^\top + \left[ \left( \nabla_{\mathbf{Y}_{[i]}}\mathcal{L} \right) \mathbf{V}_{[i]}^\top \odot \mathbf{M}_C \right]^\top \mathbf{Q}_{[i]} \\
+\nabla_{\mathbf{V}_{[i]}}\mathcal{L} &= \mathbf{K}_{[i]} \, \nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L} + \left( \mathbf{Q}_{[i]} \mathbf{K}_{[i]}^\top \odot \mathbf{M}_C \right)^\top \nabla_{\mathbf{Y}_{[i]}}\mathcal{L}
+\end{aligned}
+$$
+
+The gated variants follow the same equations, with the gate also scaling the state gradient at every step, and they have one more output, the gradient of the forget gate. For GLA[^gla] it is the state gradient times the previous state, summed over the value dimension: $\nabla_{f_t}\mathcal{L} = \left(\nabla_{\mathbf{H}_t}\mathcal{L} \odot \mathbf{H}_{t-1}\right)\mathbf{1}_V$. RetNet[^retnet] and Mamba-2[^mamba2] follow the same pattern with a scalar gate, and their chunkwise forms follow the same derivation.
+
+Our kernels never materialize $\nabla_{\mathbf{H}_t}\mathcal{L}$ and $\mathbf{H}_{t-1}$ one timestep at a time to get $\nabla_{f_t}\mathcal{L}$. The forward already writes every $f$-dependent ratio as an exponentiated chunk-local prefix sum of $\log f$, so the backward differentiates *that* prefix sum instead. The adjoint of a prefix sum is a suffix sum, so the gradient kernel accumulates $q_t \odot \nabla_{q_t}\mathcal{L} - k_t \odot \nabla_{k_t}\mathcal{L}$ at every position and suffix-sums it within the chunk, plus a boundary term from $\mathbf{H}_{iC} \odot \nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L}$. The result is $\nabla_{\log f_t}\mathcal{L} = f_t \, \nabla_{f_t}\mathcal{L}$: the same quantity as above, reached by differentiating the log-space form instead of the one-step recurrence.
+
+In practice the backward runs as two kernels. A `state-passing kernel` reruns the forward recurrence to recompute $\mathbf{H}_{iC}$ at the start of every chunk and stores it in HBM. A `gradient kernel` then walks the chunks in reverse, carrying $\nabla_{\mathbf{H}}\mathcal{L}$, and computes the gradients of the queries, keys, values and gate (<SecRef id="backward-kernels" />).
+
+# Pallas Kernels for Linear Attention
+## Forward Kernels
+We implement the TPU forward pass in Pallas as a fused, chunkwise recurrence.
+Our first implementation tiled the batch, the sequence and the value head dimension, with a program grid of `(B, ceil(V / BLOCK_SIZE_V), ceil(S / BLOCK_SIZE_S))`.
+The current kernel tiles only the batch and the sequence: with `BLOCK_SIZE_S = 256` the grid is `(B, ceil(S / BLOCK_SIZE_S))`, and every program covers all heads and the full value width of its chunk.
+Every per-head tensor arrives flattened to `(B, S, N·K)`, the layout a projection produces, so a head is a lane-aligned column slice of a block, and a value tile spanning all heads would not be a rectangular block.
+The batch axis is parallel, while the sequence axis is sequential because each chunk needs the state produced by the previous one. This maps well to a TPU: with a single TensorCore, the batch axis alone keeps the chip busy, and a program can carry the recurrent state in VMEM across the whole sequence instead of writing every intermediate state to HBM (<SecRef id="gpus-vs-tpus" />).
+
+Each program keeps the recurrent state of all $N$ heads in VMEM as an `fp32` $(N, K, V)$ tile.
+It initializes the state from the optional input state (or zero) and then walks the sequence one chunk at a time.
+Within a chunk it loads $\mathbf{Q}_{[i]}$, $\mathbf{K}_{[i]}$ and $\mathbf{V}_{[i]}$, computes the causal intra-chunk term $(\mathbf{Q}_{[i]} \mathbf{K}_{[i]}^\top \odot \mathbf{M}_C) \mathbf{V}_{[i]}$, adds the readout of the carried state $\mathbf{Q}_{[i]} \mathbf{H}_{iC}$, writes the output, and updates the state with the chunk's $\mathbf{K}_{[i]}^\top \mathbf{V}_{[i]}$.
+State passing and output readout thus happen in the same Pallas program instead of two separate kernels; we call this the `fused block-recurrent` kernel.
+
+### Mamba-2
+
+Mamba-2[^mamba2] uses a scalar, data-dependent forget gate $f_t$. All terms involving the cumulative product of the forget values $\left( F_t = \prod_{s \leq t} f_s \right)$ in [the architecture table](#linear-attention-forms) can then be evaluated in log space for numerical stability as:
+$$
+\log \left( \frac{F_i}{F_j} \right) = \sum_{u=j+1}^{i} \log f_u,
+\qquad
+\frac{F_i}{F_j} = \exp\!\left(\sum_{u=j+1}^{i} \log f_u\right),
+\qquad j < i.
+$$
+
+In the current implementation, a separate XLA op computes this chunk-local prefix sum before the Mamba-2 Pallas kernel runs, as a multiplication by a triangular matrix of ones (the same trick GLA uses inside its kernel, described next). On a per-head gate this matmul takes 6 µs, where XLA's `jnp.cumsum` takes 86 µs. The kernel then exponentiates the prefix where the recurrence needs it.
+
+### Gated Linear Attention
+
+GLA[^gla] replaces the scalar gate with a diagonal one: every key channel has its own forget value, so $f_t \in \mathbb{R}^K$ and $F_t = \prod_{s \leq t} f_s$ is taken elementwise. Our first GLA kernels were the Mamba-2 kernels with the gate widened to $K$ channels. The `cumsum` then had $K$ times as many elements, became bound by VPU throughput, and noticeably slowed down end-to-end training.
+
+A prefix sum is a linear map, though, so the MXU can compute it instead. For a chunk of $C$ positions following position $j$ (so $i = j + C$), all $C$ prefix sums come from a single multiplication by a lower-triangular matrix of ones:
+$$
+\begin{bmatrix}
+\log \left( \dfrac{F_{j+1}}{F_j} \right) \\
+\log \left( \dfrac{F_{j+2}}{F_j} \right) \\
+\vdots \\
+\log \left( \dfrac{F_i}{F_j} \right)
+\end{bmatrix}
+=
+\underbrace{
+\begin{bmatrix}
+1 & 0 & \cdots & 0 \\
+1 & 1 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+1 & 1 & \cdots & 1
+\end{bmatrix}
+}_{\mathbf{M}_C\;\text{(lower-triangular prefix-sum matrix)}}
+\begin{bmatrix}
+\log f_{j+1} \\
+\log f_{j+2} \\
+\vdots \\
+\log f_i
+\end{bmatrix}.
+$$
+
+The final entry gives $\log(F_i/F_j)$; exponentiating it gives the desired ratio. In the optimized GLA path, the Pallas program takes the raw log decays and multiplies them by $\mathbf{M}_C$ on the MXU, accumulating in fp32.
+The resulting prefix is exponentiated only where needed to scale $\mathbf{Q}_{[i]}$, $\mathbf{K}_{[i]}$, or the carried state.
+This keeps the scan inside the fused custom kernel and avoids a separate prefix-scan kernel.
+
+The kernels accept any sharing of heads between queries, keys, values and the gate, as in grouped-query attention: with $N = \max\{N_q, N_k, N_v\}$ heads in total, each input is shared by $G_q = N / N_q$, $G_k = N / N_k$ and $G_v = N / N_v$ heads. A general kernel handles these layouts by visiting the heads one at a time. An optimized kernel handles the common case, where queries, keys and values all have the same number of heads, a multiple of 4. This kernel packs $G$ heads into each systolic dot, with $G = 8$ for the diagonal gate and $G = 4$ otherwise.
+Only the diagonal gate on this optimized path scans inside the kernel. Every other gated layout computes the chunk-local prefix in a separate XLA op before the kernel runs: a triangular matmul for the scalar gate, and `jnp.cumsum` for a diagonal gate shared across heads.
+
+We present the full forward algorithm for GLA in <AlgRef id="alg-la-forward" />.
+<Algorithm id="alg-la-forward" source={laForwardAlgo} />
+
+<AlgRef id="alg-la-forward" /> says what each program computes, but its speed depends on two things the pseudocode leaves out: where each operand sits while a chunk is processed, and which unit of the TensorCore runs each line.
+
+**Data movement.** Each operand's `BlockSpec` describes one chunk-sized block, $C \times N{\cdot}K$ (or $C \times N{\cdot}V$), per grid step.
+Pallas double-buffers these blocks, so while chunk $i$ computes, the copy of chunk $i{+}1$ from HBM into VMEM is already in flight.
+The recurrent state never leaves VMEM between chunks. It takes 1 MB in `fp32` at shape $(N{=}16$, $K{=}V{=}128)$.
+On the fused-projection path the three `BlockSpec`s of $q, k, v$ point at the three lane blocks of one `(B, S, 3·N·K)` tensor, so the kernel reads them straight out of the projection.
+
+**MXU and VPU.** Every matrix-shaped term, $\mathbf{Q}\mathbf{K}^\top$, $\mathbf{P}\mathbf{V}$, the state readout, state update and the diagonal gate's prefix sum, is one batched systolic dot over a group of $G$ heads (4, or 8 for the diagonal gate), with `bf16` operands and `fp32` accumulation.
+Batching the heads into one dot keeps the MXU busy: 16 small per-head dots per product don't achieve full utilization.
+The VPU does all elementwise operations in `fp32`: the causal masking, the exponentials and applying the decay.
+The states are always kept in `fp32` and rounded to `bf16` only during a matrix multiply for the systolic array.
+
+**Throughput.** <FigRef id="fig-la-speed" full /> compares the forward kernel with three plain-JAX implementations (a per-step loop, `jax.lax.scan`, and the chunkwise algorithm) at $B{=}8$, $S{=}4096$, $N{=}16$, $K{=}V{=}128$ in `bf16`, with the inputs in the projection's `(B, S, N·K)` layout.
+The forward moves $\mathbf{Q}$, $\mathbf{K}$, $\mathbf{V}$, the gate, $\mathbf{Y}$ and the final state, and does about 190 FLOPs per byte, far below the MXU's crossover of 560 (<SecRef id="benchmark-setup" />). So we report its HBM bandwidth.
+
+FLAT reaches 1.42, 1.25 and 1.48 TB/s for Linear Attention, Mamba-2 and GLA (384.9, 438.0 and 549.8 µs), so the forward is limited by memory traffic, not by the MXU.
+GLA takes the longest because its `fp32` gate is one more $S \times N{\cdot}K$ tensor to read.
+Its bandwidth lands slightly above the copy bar, which a kernel streaming several operands at once can do.
+Mamba-2 is the one that falls short. With a different decay per head, it builds a separate $C \times C$ decay matrix for every head on the VPU, a cost we return to after the backward kernels.
+
+The recurrence written step by step, either as a per-step reference or with `jax.lax.scan`, takes 33 to 100 ms, 87 to 260$\times$ slower than FLAT.
+Each step is a matrix-vector product with a single position which is too small to keep the MXU busy.
+A fairer baseline is the same chunkwise algorithm in plain JAX: einsums over the chunks and a `jax.lax.scan` over the chunk states, compiled by XLA.
+It reaches 0.22, 0.20 and 0.16 TB/s, so FLAT is 6.4, 6.1 and 9.3$\times$ faster. Without a custom kernel, the recurrent state and every intermediate that XLA does not fuse make a round trip through HBM.
+
+<Figure id="fig-la-speed">
+  <LaSpeedChart client:visible />
+  <span slot="caption">Forward throughput as HBM bandwidth (higher is better) at $B{=}8, S{=}4096, N{=}16, K{=}V{=}128$, bf16. The leftmost bar is the <code>jnp.copy</code> roof; hover over a bar for its wall-clock time.</span>
+</Figure>
+
+## Backward Kernels
+<AlgRef id="alg-la-backward" /> gives both backward kernels, the state-passing kernel and the gradient kernel.
+
+<Algorithm id="alg-la-backward" source={laBackwardAlgo} />
+
+- **State passing.** It is the forward kernel without the output readout. Instead of $\mathbf{Y}$, it writes each chunk's starting state $\mathbf{H}_{iC}$ to HBM in `bf16`.
+
+- **Gradient kernel.** It visits the chunks last to first, updating $\nabla_{\mathbf{H}}\mathcal{L}$ (the gradient of the state entering the current chunk) in a `fp32` VMEM buffer.
+Each chunk contributes through the carried states $(\nabla_{\mathbf{Q}}\mathcal{L}$ via $\mathbf{H}_{iC}$; $\nabla_{\mathbf{K}}\mathcal{L}$, $\nabla_{\mathbf{V}}\mathcal{L}$ via $\nabla_{\mathbf{H}}\mathcal{L})$.
+$\nabla_{\mathbf{K}}\mathcal{L}$ and $\nabla_{\mathbf{V}}\mathcal{L}$ must use $\nabla_{\mathbf{H}}\mathcal{L}$ from later chunks, so the chunk's own $\left(\mathbf{Q}_{[i]} \odot \frac{\boldsymbol F_{[i]}}{F_{iC}}\right)^\top \nabla_{\mathbf{Y}_{[i]}}\mathcal{L}$ is added only afterwards. Products are batched over 8 heads.
+
+- **The gate gradient.** The kernel computes the suffix sum from <SecRef id="backward-recurrence" /> as one triangular matmul on the MXU, with $\mathbf{U}_C = \mathbf{M}_C^\top$. Its fp32 input, $q_t \odot \nabla_{q_t}\mathcal{L} - k_t \odot \nabla_{k_t}\mathcal{L}$, is a difference of nearly equal terms, which a single bf16 pass would round away (2% error under strong decay), so the kernel splits it into two bf16 halves and runs the matmul twice. The boundary term is shared by every position in the chunk, because the chunk's total decay $F_{(i+1)C}/F_{iC}$ also scales the carried state and every key's contribution to it.
+
+**Throughput.** We time the two backward kernels separately, at the shape of <FigRef id="fig-la-speed" full /> and against the same baselines.
+
+State passing (<FigRef id="fig-la-state-passing" full />) reads $\mathbf{K}$, $\mathbf{V}$ and the gate and writes one `bf16` state per chunk, 67 MB at this shape.
+It achieves 1.48, 1.31 and 1.53 TB/s for Linear Attention, Mamba-2 and GLA respectively.
+Linear Attention and GLA land above the 1.46 TB/s copy bar, as a kernel streaming several operands can.
+The Mamba-2 time includes the separate pre-pass that computes its chunk-local prefix sum.
+Chunked JAX reaches 0.40, 0.23 and 0.19 TB/s, so FLAT is 3.7, 5.8 and 8.2$\times$ faster.
+
+<Figure id="fig-la-state-passing">
+  <LaStatePassingChart client:visible />
+  <span slot="caption">State-passing kernel throughput as HBM bandwidth (higher is better), same setup as <FigRef id="fig-la-speed" full />. Hover over a bar for its wall-clock time.</span>
+</Figure>
+
+The gradient kernel (<FigRef id="fig-la-grad-core" full />), timed with the chunk states already in HBM, does most of the backward's work.
+It achieves 1.42, 1.00 and 1.37 TB/s for Linear Attention, Mamba-2 and GLA respectively.
+The step-by-step baselines produce no number at this shape. The per-step reference's backward does not finish compiling within 45 minutes. `jax.lax.scan`'s backward runs out of HBM, because differentiating through the scan keeps the state of every one of the 4096 steps, 17 GB in `bf16` and 34 GB in `fp32`.
+That leaves only chunked JAX. It reaches 0.19, 0.12 and 0.12 TB/s, so FLAT is 7.4, 8.1 and 11.4$\times$ faster.
+
+<Figure id="fig-la-grad-core">
+  <LaBwdCoreChart client:visible />
+  <span slot="caption">Gradient kernel throughput as HBM bandwidth (higher is better), same setup, chunk states precomputed. Missing bars did not compile or ran out of memory.</span>
+</Figure>
+
+Across the forward, state passing and gradient kernels, Linear Attention and GLA run at or near the HBM roof, and Mamba-2 does not.
+With one decay per head, Mamba-2's forward computes a separate $256 \times 256$ decay matrix $F_i / F_j$ for every head, which makes it about 8% slower than with one decay shared by all heads; state passing is about 9% slower because it handles 16 per-row decays instead of one.
+The gradient kernel is furthest from the roof, about 325 µs above its byte floor, even with a shared decay: the gate gradient alone costs about 280 µs, including a two-pass suffix sum (about 85 µs for the second pass) that keeps its cancelling `fp32` terms accurate, and the per-head decays add about 90 µs on top.
+
+## Comparison with H100
+For reference we run [flash-linear-attention](https://github.com/fla-org/flash-linear-attention) (FLA, Triton) on an H100 80GB at the same shape: `chunk_simple_gla` for Linear Attention and Mamba-2 and `chunk_gla` for GLA, with FLA's chunk size of 64.
+The H100's copy roof is 2.98 TB/s, 2.04$\times$ the v6e's 1.46 TB/s, yet FLAT on one v6e chip is 1.22, 1.14 and 2.94$\times$ faster for Linear Attention, Mamba-2 and GLA in the forward, 1.76, 1.64 and 3.12$\times$ in the backward, and 1.59, 1.50 and 3.08$\times$ overall (<FigRef id="fig-la-h100" full />).
+Run on its own, FLA's state passing (192.1, 204.9 and 465.7 µs) is 1.18 and 1.27$\times$ faster than ours for Linear Attention and Mamba-2, and ours is 1.18$\times$ faster for GLA.
+
+# Depthwise Causal Short Convolution
+Almost every linear-attention variant runs $q_t, k_t, v_t$ through a short depthwise causal convolution before the recurrence (<FigRef id="fig-layer" full />). We ship it as a standalone kernel so it works with any recurrence; fusing it into the recurrence would save one round trip through HBM and is left for future work.
+
+## Forward
+With weights $W \in \mathbb{R}^{K \times H}$ (tap $W_k \in \mathbb{R}^H$), bias $b \in \mathbb{R}^H$ and $\odot$ the per-channel product:
+$$
+z_t = b + \sum_{k=0}^{K-1} W_k \odot x_{t - (K - 1 - k)} \\
+y_t = \mathrm{SiLU} (z_t)
+$$
+Linear attention layers typically use $K = 4$[^mamba2][^gla][^deltanet]. A convolution can be written as a matrix multiply, but a short depthwise one has only $K$ taps per channel and no mixing between channels, so mapping it onto a matmul unit takes a lot of padding. A TPU's systolic arrays are larger than a GPU's tensor cores, so most of that matmul would multiply zeros.
+
+So we compute the convolution as a sum of $K$ shifted copies of $x$, scaled and accumulated on the VPU, with no padding. The Pallas grid stages every input and output tile between HBM (the large, slow off-chip memory) and VMEM (the small on-chip memory the kernel computes from) automatically, once per grid step. The SiLU is applied in the forward kernel's epilogue, so $z_t$ never goes to HBM.
+
+## Backward
+Training needs $\nabla_{x_t}\mathcal{L}, \nabla_{W_k}\mathcal{L}, \nabla_b\mathcal{L}$ given $\nabla_{y_t}\mathcal{L}$. The gradient first passes back through the activation, $\nabla_{z_t}\mathcal{L} = \nabla_{y_t}\mathcal{L} \odot \mathrm{SiLU}'(z_t)$ with $\mathrm{SiLU}'(z) = \sigma(z)[1 + z(1-\sigma(z))]$, and then:
+$$
+\begin{aligned}
+\nabla_b\mathcal{L} &= \textstyle\sum_t \nabla_{z_t}\mathcal{L} \\
+\nabla_{W_k}\mathcal{L} &= \textstyle\sum_t \nabla_{z_t}\mathcal{L} \odot x_{t-(K-1-k)} \\
+\nabla_{x_t}\mathcal{L} &= \textstyle\sum_{k=0}^{K-1} W_k \odot \nabla_{z_{t + (K-1-k)}}\mathcal{L}
+\end{aligned}
+$$
+The weight gradient reuses the forward's shifted inputs: $\nabla_{W_k}\mathcal{L}$ multiplies the same copy $x_{t-(K-1-k)}$ that tap $k$ reads by $\nabla_{z_t}\mathcal{L}$ instead of by $W_k$, then reduces over every position in the batch rather than across the $K$ taps. The bias gradient is that reduction applied to $\nabla_{z_t}\mathcal{L}$ alone. The input gradient is the adjoint of a causal convolution: an *anti-causal* correlation that reads $K-1$ steps into the future of $\nabla_{z}\mathcal{L}$ instead of the past of $x$, using the same taps $W_k$. Chunks are processed in reverse order, and just as the forward pass carries the last $K-1$ inputs forward as `state`, the backward pass carries $\nabla_{z_t}\mathcal{L}$ at the first $K-1$ positions of a chunk backward across the boundary as `future`, so $\nabla_{x_t}\mathcal{L}$ near the end of the previous chunk can still see into this one.
+
+## Performance
+We benchmark both the forward and backward of the **short** depthwise causal convolution kernel using batch size $(B=8)$, kernel size $(K=4)$ with bias and $\textrm{SiLU}$ activation. We use sequence length $S = 4096$ and hidden size $H = 2048$. The setup is the same as for linear attention (<SecRef id="benchmark-setup" />).
+
+Per element, the forward does $2K = 8$ FLOPs for the convolution (4 multiplies, 3 adds and the bias add) and 6 for the SiLU: a negate, an exp, an add, a reciprocal plus a refinement multiply for $1/(1+e^{-z})$ (the VPU has no fused divide), and the final multiply, about 14 FLOPs in all. It moves 4 bytes per element: $x_t$ read from HBM and $y_t$ written back.
+
+$$\textrm{AI} = \frac{14 \times 8 \times 4096 \times 2048}{272{,}650{,}240\ \textrm{B}} = \frac{939.5\ \textrm{MFLOP}}{272.7\ \textrm{MB}} \approx 3.45\ \textrm{FLOP/B}$$
+
+For linear attention the ceiling was obvious: at about 190 FLOP/byte against a crossover of 560, every kernel is memory-bound, and its bandwidth says how close it gets. The convolution sits right at the VPU's crossover instead. Its forward does 3.45 FLOP/byte against about 4.3. We plot the roofline[^roofline] (<FigRef id="fig-conv-roofline" full />): achieved FLOP/s against arithmetic intensity, under the HBM slope and the VPU's flat ceiling (7.091 TFLOP/s). A kernel at a ceiling is limited by that resource, and the gap below it shows what is left.
+
+<Figure id="fig-conv-roofline">
+  <RooflineChart client:visible />
+  <span slot="caption">Roofline for the short causal convolution on TPU v6e (1.638 TB/s HBM, 7.091 TFLOP/s measured VPU peak). The forward (AI 3.45) runs at 1.126 TB/s, below both ceilings. The hollow marker is kernel v1, our first kernel.</span>
+</Figure>
+
+The forward sits below both ceilings. It needs 166.5 µs to stream its bytes at the 1.638 TB/s spec, and at least 132.5 µs of VPU arithmetic, but its compiled schedule (shifts, casts and moves included) is 6,347 bundles per grid step, about 236 µs over 64 steps, which is essentially its whole measured 239.5 µs. It runs at 1.126 TB/s, 69% of the spec bandwidth. The backward was bound by vector slots; patching only the rows a shift wraps around, shifting in fp32, and reusing the shifted taps between $\nabla_{x}\mathcal{L}$ and $\nabla_{W}\mathcal{L}$ cut it from 13,016 to 11,617 bundles per grid step, 486.7 → 431.1 µs.
+
+**From kernel v1 to FLAT.** Kernel v1, our first kernel, used the same algorithm and moved the same bytes, but took 272 µs in the forward and 526 µs in the backward. Since neither pass was at the HBM roof, we optimized the bundles: we read the compiled schedule for each grid step and removed the instructions that crowded its busiest slots. This brought the forward to 239.5 µs, $1.14\times$ faster than kernel v1, and the backward to 431.1 µs, $1.22\times$ faster.
+
+Our baseline is the same convolution written in plain JAX and compiled by XLA (<FigRef id="fig-xla-fwd" group full />).
+In the forward, FLAT takes 239.5 µs against XLA's 495.1 µs, $2.07\times$ faster. Over a third of XLA's time (37%) goes to transposing its output back into the layout the linear-attention kernels expect.
+The gap is wider in the backward: 431.1 µs against 2,806 µs, $6.5\times$ faster. XLA computes $\nabla_{W}\mathcal{L}$ as another convolution over the whole sequence and moves 3.36 GB, $8.2\times$ the 407 MB the backward has to move. FLAT reads the shifted inputs once and reduces them on the MXU.
+Forward and backward together take 671 µs instead of 3,301 µs, $4.9\times$ faster.
+
+<div class="figure-row">
+  <Figure id="fig-xla-fwd">
+    <XlaCompareFwdChart client:visible />
+    <span slot="caption">Forward, device time: 495.1 µs for XLA, 37% of it an output transpose, vs 239.5 µs for FLAT (2.07$\times$). The middle bar is kernel v1, our first kernel (272 µs).</span>
+  </Figure>
+  <Figure id="fig-xla-bwd">
+    <XlaCompareBwdChart client:visible />
+    <span slot="caption">Backward, device time: 2,806 µs for XLA, which computes $\nabla_{W}\mathcal{L}$ as a convolution over the whole sequence and moves 3.36 GB (8.2$\times$ the 407 MB minimum), vs 431.1 µs for FLAT (6.5$\times$). The middle bar is kernel v1 (526 µs).</span>
+  </Figure>
+</div>
+
+# Full Linear Attention Layer
+Timing kernels alone hides what happens at their boundaries.
+Our first kernels took `(B, S, N, K)` operands, whose HBM tiling differs from the `(B, S, N·K)` tiling a projection produces. In a full layer, XLA spent 1.8 ms per step copying $q, k, v$ and their gradients between the two layouts, and another 1.1 ms splitting the fused projection and concatenating its gradient.
+The shipped FLAT kernels avoid both: they read $q, k, v$ straight out of the fused projection (<SecRef id="forward-kernels" />) and write one fused gradient.
+
+We time one training step of the layer in <FigRef id="fig-layer" full />, configured like FLA's standard GLA layer, with a 4-tap convolution on 6,144 channels and a per-head RMSNorm multiplied by a swish output gate. We compare three versions of the layer: one without kernels, which uses the chunked JAX baseline since the step-by-step recurrence cannot be trained at this size; one with our linear-attention kernels; and one that also uses our convolution kernel.
+<FigRef id="fig-la-layer-ops" full /> breaks each step down by the part of the layer that each op or kernel belongs to.
+Without FLAT kernels, a step takes 21.6, 23.9 and 34.4 ms for Linear Attention, Mamba-2 and GLA, and the recurrence alone accounts for 9.5, 10.9 and 14.8 ms of it.
+Our linear-attention kernels cut the recurrence to 1.3, 1.7 and 2.0 ms, which makes the step 1.58, 1.66 and 2.14$\times$ faster.
+Adding the convolution kernel brings the step to 10.2, 10.9 and 12.5 ms, 2.12, 2.18 and 2.75$\times$ faster than without kernels.
+XLA's convolution costs about 3.5 ms more than ours, partly because XLA fuses it into the neighbouring projection matmuls and slows them down.
+GLA gains the most because plain JAX handles its diagonal gate worst: without kernels, its forget gate takes 3.9 ms and its cumulative sums another 2.8 ms.
+The output norm and gate have no kernel of their own and run as XLA fusions, taking 2.3 ms per step.
+
+**Comparison with Splash Attention.** We also time a causal softmax-attention layer of the same shape: the fused projection, Splash Attention (JAX's Pallas flash-attention kernel for TPUs) with its fastest block sizes, and the output projection.
+It takes 15.9 ms per step, so the linear-attention layers with all kernels are 1.56, 1.46 and 1.27$\times$ faster, even though they also run a convolution, a forget gate and an output gate that the softmax layer does not have.
+The difference comes from the attention itself. Splash takes 12.6 ms of the 15.9 ms step (79%), including 1.4 ms of copies that split the projection and lay $q, k, v$ out the way Splash requires.
+Our recurrence takes 1.3, 1.7 and 2.0 ms, 9.8, 7.4 and 6.4$\times$ less.
+The extra parts of the linear-attention layer give back much of that gain (for Linear Attention, the convolution, output gate and norm take 4.4 ms), which is why the whole layer is only 1.27–1.56$\times$ faster.
+Softmax attention's cost grows quadratically with the sequence length and ours linearly, so the gap widens beyond $S{=}4096$.
+
+<Figure id="fig-la-layer-ops">
+  <LaLayerOpsChart client:visible />
+  <span slot="caption">Device time of one training step of the full layer ($B{=}8, S{=}4096$, model width 2,048, 16 heads of 128, bf16), by part of the layer; lighter shades are the backward pass. A fusion is credited to the part its output belongs to, and ops with no source location go under <i>other ops</i>.</span>
+</Figure>
+
+# Conclusion
+FLAT brings fast training kernels for Linear Attention, Mamba-2 and GLA to TPUs, together with a kernel for the short convolution that precedes them.
+The Linear Attention and GLA kernels run at the HBM roof of a v6e chip, up to 11.4$\times$ faster than the same algorithm compiled by XLA.
+Across the forward and backward, one v6e chip is up to $3.08\times$ faster than FLA on an H100, despite having half the memory bandwidth.
+In a full training step, the kernels make the layer 2.1–2.75$\times$ faster, and at $S{=}4096$ it is faster than a softmax-attention layer using Splash Attention.
+
+**Future work.** Several gaps remain:
+- **Delta-rule layers.** DeltaNet[^deltanet], Gated DeltaNet[^gdn] and Kimi Delta Attention[^kda] are the variants used in current production models. Their state update is not a plain sum of outer products, so they need new kernels.
+- **More fusion.** The convolution could be fused into the recurrence, which would save a round trip through HBM. The output norm and gate, which take 2.3 ms per step as XLA fusions, could get their own kernel.
+- **Other TPU generations.** All our numbers come from a single v6e chip. Other TPU generations, and sharding the sequence across chips for long contexts, remain to be tested.
+- **Other chips.** We aim to bring Linear Attention support to Amazon's Trainium chips[^trainium] soon.

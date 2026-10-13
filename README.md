@@ -25,5 +25,5 @@ frontmatter fields). `##`/`###` headings populate the table of contents.
 
 ## Deploying
 
-`npm run build` produces a static `dist/` for any static host. Set `site` in
-`astro.config.mjs` to the real domain first.
+Every push to `main` builds the site and publishes it to
+https://trainstation-project.github.io (`.github/workflows/deploy.yml`).

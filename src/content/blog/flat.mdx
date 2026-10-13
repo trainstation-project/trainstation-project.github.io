@@ -66,6 +66,16 @@ While GPUs have fast kernels for these layers, such as [FLA (flash-linear-attent
 Recent TPU work targets inference[^tpu-megakernels][^flywheel]; we know of no open-source kernels for *training* these layers on TPUs.
 We release [FLAT: Flash Linear Attention on TPUs](https://github.com/open-lm-engine/accelerated-model-architectures), Pallas implementations of Linear Attention[^linearattention], Mamba-2[^mamba2], and Gated Linear Attention (GLA)[^gla] for TPUs, benchmarked on a [TPU v6e (Trillium) chip](https://docs.cloud.google.com/tpu/docs/v6e). We also release a fast Pallas kernel for the short causal convolution that most linear attention layers apply before the recurrence. Counting the forward and backward together, FLAT on one TPU v6e chip is up to $3\times$ faster than FLA on an NVIDIA H100 (<FigRef id="fig-la-h100" full />): 1,982 µs against 6,106 µs for GLA, $1.6\times$ faster for Linear Attention and $1.5\times$ faster for Mamba-2. We use these kernels to train [Rigel](https://open-lm-engine.github.io/blog/rigel/)[^mishra2026rigel] on TPU chips.
 
+Writing these kernels for a TPU turned out to be a different problem from writing them for a GPU (<SecRef id="gpus-vs-tpus" />). Three things kept getting in our way:
+1. **The VPU is slow.** The vector unit (VPU) is much slower than the matrix unit (MXU). We measured about 7 TFLOP/s on the VPU, while the MXU is rated at 918 TFLOP/s, and every exponential, mask and prefix sum in linear attention has to run on the VPU.
+2. **Instruction slots run out.** There are only so many slots per cycle. The compiler schedules everything ahead of time into fixed-width bundles, so vector math, loads, stores and register spills all compete for the same slots. Once a kernel isn't waiting on memory, its runtime is simply the number of bundles it issues.
+3. **Per-head matmuls are too small.** The MXU is large, and the matmuls in a single head are small. If you issue one matmul per head, most of the systolic array sits idle.
+
+Most of our speedups come from three ideas:
+1. **Pack heads into the MXU.** We pack several heads (4, or 8 for GLA) into each MXU matmul instead of running them one at a time.
+2. **Do scans on the MXU.** We move the prefix sums over the decay gates off the VPU and onto the MXU, by writing each one as a multiplication with a triangular matrix of ones.
+3. **Keep the state on-chip.** Since a v6e chip has a single core, we fuse the state passing and the output into one kernel and keep the recurrent state in VMEM for the whole sequence. FLA on a GPU, by contrast, writes every chunk's state to HBM and reads it back.
+
 We aim to release training kernels for DeltaNet[^deltanet], Gated DeltaNet[^gdn] and Kimi Delta Attention[^kda] soon.
 
 <Figure id="fig-la-h100">
@@ -86,9 +96,9 @@ Each cycle, a v6e TensorCore issues one instruction *bundle*<Sidenote>A bundle c
 
 #### Why linear attention is hard on a TPU
 GPU kernels for linear attention rely on hardware a TPU does not have, so they cannot simply be translated. The features above turn into three problems:
-- **The matmuls are small.** One head's chunk works on $C \times C$, $C \times V$ and $K \times V$ blocks, and each chunk's state depends on the previous one. Every block is small next to the MXU, and a weight-stationary array charges for loading each one. Our first kernels issued one dot per head and the MXU sat waiting; batching several heads into each dot fixed that.
-- **Everything else competes for vector slots.** The decay exponentials, the causal mask, the convolution and SiLU are all vector work, sharing each bundle's slots with loads, stores and register spills. A GPU overlaps such work with its tensor cores across many warps; on a TPU it adds straight to the bundle count. Our convolution backward was limited by exactly this, and Flywheel Attention[^flywheel] hits the same limit with softmax. Inferact's Kimi K3 megakernel[^tpu-megakernels] even had to spread residual adds and norms across chips at small batch sizes.
-- **The layout is chosen once.** Tiles and DMA windows align to fixed shapes, so a kernel must commit to where heads and positions live, and an input that arrives in another layout has to be copied first. In a full layer these copies cost us 1.8 ms per step (<SecRef id="full-linear-attention-layer" />).
+1. **The matmuls are small.** One head's chunk works on $C \times C$, $C \times V$ and $K \times V$ blocks, and each chunk's state depends on the previous one. Every block is small next to the MXU, and a weight-stationary array charges for loading each one. Our first kernels issued one dot per head and the MXU sat waiting; batching several heads into each dot fixed that.
+2. **Everything else competes for vector slots.** The decay exponentials, the causal mask, the convolution and SiLU are all vector work, sharing each bundle's slots with loads, stores and register spills. A GPU overlaps such work with its tensor cores across many warps; on a TPU it adds straight to the bundle count. Our convolution backward was limited by exactly this, and Flywheel Attention[^flywheel] hits the same limit with softmax. Inferact's Kimi K3 megakernel[^tpu-megakernels] even had to spread residual adds and norms across chips at small batch sizes.
+3. **The layout is chosen once.** Tiles and DMA windows align to fixed shapes, so a kernel must commit to where heads and positions live, and an input that arrives in another layout has to be copied first. In a full layer these copies cost us 1.8 ms per step (<SecRef id="full-linear-attention-layer" />).
 
 One property of the TPU works in our favor. A GPU kernel has to spread its work over many SMs, so FLA computes the chunk states in one kernel, writes them to HBM, and reads them back in a second kernel to produce the output. A v6e chip has a single core, and the kernel itself decides what stays in its VMEM, so our forward keeps the recurrent state in VMEM for the whole sequence and computes the states and the output in one kernel (<FigRef id="fig-la-h100" full />). Inferact's megakernel relies on the same property to prefetch the next layer's weights into VMEM while the current layer runs[^tpu-megakernels].
 
@@ -97,8 +107,8 @@ All our measurements are taken on a single TPU v6e chip and report device time. 
 Unless stated otherwise, inputs and outputs are in `bf16`[^bf16], and accumulations and reductions are in `fp32`.
 
 We judge every kernel against the two ceilings of a roofline model[^roofline].
-- **Memory.** The v6e's HBM is rated at 1.638 TB/s, but the best a kernel can practically sustain is what `jnp.copy` achieves, which we time the same way: 1.46 TB/s, 89% of the rating. We report a kernel's bandwidth as the bytes it must read and write divided by its time. A kernel that streams several operands at once can slightly beat a single copy, reaching about 1.54 TB/s in our measurements.
-- **Compute.** Google publishes the MXU's peak, 918 `bf16` TFLOP/s, but not the VPU's. To measure the VPU's, we wrote a Pallas kernel that loads two tensors from HBM into VMEM, adds them 1,000,000 times and writes the result back. It reaches 7.091 TFLOP/s, which we use as the VPU peak.
+1. **Memory.** The v6e's HBM is rated at 1.638 TB/s, but the best a kernel can practically sustain is what `jnp.copy` achieves, which we time the same way: 1.46 TB/s, 89% of the rating. We report a kernel's bandwidth as the bytes it must read and write divided by its time. A kernel that streams several operands at once can slightly beat a single copy, reaching about 1.54 TB/s in our measurements.
+2. **Compute.** Google publishes the MXU's peak, 918 `bf16` TFLOP/s, but not the VPU's. To measure the VPU's, we wrote a Pallas kernel that loads two tensors from HBM into VMEM, adds them 1,000,000 times and writes the result back. It reaches 7.091 TFLOP/s, which we use as the VPU peak.
 
 A kernel's arithmetic intensity, the FLOPs it does per byte it moves, decides which ceiling applies. On the MXU the crossover is about $918 / 1.638 \approx 560$ FLOP/byte, and on the VPU it is about $7.091 / 1.638 \approx 4.3$ FLOP/byte.
 
@@ -278,13 +288,13 @@ It reaches 0.22, 0.20 and 0.16 TB/s, so FLAT is 6.4, 6.1 and 9.3$\times$ faster.
 
 <Algorithm id="alg-la-backward" source={laBackwardAlgo} />
 
-- **State passing.** It is the forward kernel without the output readout. Instead of $\mathbf{Y}$, it writes each chunk's starting state $\mathbf{H}_{iC}$ to HBM in `bf16`.
+1. **State passing.** It is the forward kernel without the output readout. Instead of $\mathbf{Y}$, it writes each chunk's starting state $\mathbf{H}_{iC}$ to HBM in `bf16`.
 
-- **Gradient kernel.** It visits the chunks last to first, updating $\nabla_{\mathbf{H}}\mathcal{L}$ (the gradient of the state entering the current chunk) in a `fp32` VMEM buffer.
+2. **Gradient kernel.** It visits the chunks last to first, updating $\nabla_{\mathbf{H}}\mathcal{L}$ (the gradient of the state entering the current chunk) in a `fp32` VMEM buffer.
 Each chunk contributes through the carried states $(\nabla_{\mathbf{Q}}\mathcal{L}$ via $\mathbf{H}_{iC}$; $\nabla_{\mathbf{K}}\mathcal{L}$, $\nabla_{\mathbf{V}}\mathcal{L}$ via $\nabla_{\mathbf{H}}\mathcal{L})$.
 $\nabla_{\mathbf{K}}\mathcal{L}$ and $\nabla_{\mathbf{V}}\mathcal{L}$ must use $\nabla_{\mathbf{H}}\mathcal{L}$ from later chunks, so the chunk's own $\left(\mathbf{Q}_{[i]} \odot \frac{\boldsymbol F_{[i]}}{F_{iC}}\right)^\top \nabla_{\mathbf{Y}_{[i]}}\mathcal{L}$ is added only afterwards. Products are batched over 8 heads.
 
-- **The gate gradient.** The kernel computes the suffix sum from <SecRef id="backward-recurrence" /> as one triangular matmul on the MXU, with $\mathbf{U}_C = \mathbf{M}_C^\top$. Its fp32 input, $q_t \odot \nabla_{q_t}\mathcal{L} - k_t \odot \nabla_{k_t}\mathcal{L}$, is a difference of nearly equal terms, which a single bf16 pass would round away (2% error under strong decay), so the kernel splits it into two bf16 halves and runs the matmul twice. The boundary term is shared by every position in the chunk, because the chunk's total decay $F_{(i+1)C}/F_{iC}$ also scales the carried state and every key's contribution to it.
+3. **The gate gradient.** The kernel computes the suffix sum from <SecRef id="backward-recurrence" /> as one triangular matmul on the MXU, with $\mathbf{U}_C = \mathbf{M}_C^\top$. Its fp32 input, $q_t \odot \nabla_{q_t}\mathcal{L} - k_t \odot \nabla_{k_t}\mathcal{L}$, is a difference of nearly equal terms, which a single bf16 pass would round away (2% error under strong decay), so the kernel splits it into two bf16 halves and runs the matmul twice. The boundary term is shared by every position in the chunk, because the chunk's total decay $F_{(i+1)C}/F_{iC}$ also scales the carried state and every key's contribution to it.
 
 **Throughput.** We time the two backward kernels separately, at the shape of <FigRef id="fig-la-speed" full /> and against the same baselines.
 
@@ -409,7 +419,7 @@ Across the forward and backward, one v6e chip is up to $3.08\times$ faster than 
 In a full training step, the kernels make the layer 2.1–2.75$\times$ faster, and at $S{=}4096$ it is faster than a softmax-attention layer using Splash Attention.
 
 **Future work.** Several gaps remain:
-- **Delta-rule layers.** DeltaNet[^deltanet], Gated DeltaNet[^gdn] and Kimi Delta Attention[^kda] are the variants used in current production models. Their state update is not a plain sum of outer products, so they need new kernels.
-- **More fusion.** The convolution could be fused into the recurrence, which would save a round trip through HBM. The output norm and gate, which take 2.3 ms per step as XLA fusions, could get their own kernel.
-- **Other TPU generations.** All our numbers come from a single v6e chip. Other TPU generations, and sharding the sequence across chips for long contexts, remain to be tested.
-- **Other chips.** We aim to bring Linear Attention support to Amazon's Trainium chips[^trainium] soon.
+1. **Delta-rule layers.** DeltaNet[^deltanet], Gated DeltaNet[^gdn] and Kimi Delta Attention[^kda] are the variants used in current production models. Their state update is not a plain sum of outer products, so they need new kernels.
+2. **More fusion.** The convolution could be fused into the recurrence, which would save a round trip through HBM. The output norm and gate, which take 2.3 ms per step as XLA fusions, could get their own kernel.
+3. **Other TPU generations.** All our numbers come from a single v6e chip. Other TPU generations, and sharding the sequence across chips for long contexts, remain to be tested.
+4. **Other chips.** We aim to bring Linear Attention support to Amazon's Trainium chips[^trainium] soon.

@@ -33,6 +33,8 @@ const watchBib = {
 // https://astro.build/config
 export default defineConfig({
   site: 'https://trainstation-project.github.io',
+  // the FLAT post was first published under its old slug
+  redirects: { '/blog/depthwise-causal-conv-on-tpu': '/blog/flat' },
   integrations: [react(), mdx()],
   vite: { plugins: [watchBib] },
   markdown: {

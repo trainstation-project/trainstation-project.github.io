@@ -32,7 +32,7 @@ const watchBib = {
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://example.com',
+  site: 'https://trainstation-project.github.io',
   integrations: [react(), mdx()],
   vite: { plugins: [watchBib] },
   markdown: {

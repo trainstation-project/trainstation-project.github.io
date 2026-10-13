@@ -177,6 +177,9 @@ export function parseAlgorithmic(rawSource) {
       } else if (line.startsWith('\\ENSURE')) {
         html.push(ioLine('Output', line.slice('\\ENSURE'.length).trim()));
         cursor++;
+      } else if (line === '\\hrule') {
+        html.push('<hr class="algo-rule" />');
+        cursor++;
       } else if (line.startsWith('\\Statex')) {
         html.push(statexLine(line.slice('\\Statex'.length).trim(), indent));
         cursor++;

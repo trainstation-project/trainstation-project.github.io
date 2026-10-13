@@ -787,6 +787,14 @@ figure {
   color: var(--ink);
 }
 
+/* \hrule: a thin rule between parts of one algorithm, matching the rule
+   under the caption and spanning the body's padding */
+.article-content .algo-rule {
+  margin: 6px -4px;
+  border: 0;
+  border-top: 0.8px solid var(--ink);
+}
+
 /* numbered statement: a small right-aligned "n:" gutter, then the statement */
 .article-content .algo-line {
   display: flex;

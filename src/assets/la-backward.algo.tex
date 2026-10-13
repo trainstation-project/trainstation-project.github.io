@@ -1,14 +1,17 @@
 \caption{Linear-attention backward: the state-passing kernel walks the sequence forward, the gradient kernel walks it in reverse. One Pallas program per batch element; decay ratios of $F$ as in \AlgRef{alg-la-forward}.}
 \begin{algorithmic}
-\REQUIRE $\mathbf{Q}, \mathbf{K}, \mathbf{V}$, the gate $\log f$, $\mathbf{H}_0$, $\nabla_{\mathbf{Y}}\mathcal{L}$, $\nabla_{\mathbf{H}_S}\mathcal{L}$
-\ENSURE $\nabla_{\mathbf{Q}}\mathcal{L}, \nabla_{\mathbf{K}}\mathcal{L}, \nabla_{\mathbf{V}}\mathcal{L}, \nabla_{\log f}\mathcal{L}, \nabla_{\mathbf{H}_0}\mathcal{L}$
-\Statex \textit{state-passing kernel}
+\Statex \textbf{State-passing kernel}
+\REQUIRE $\mathbf{K}, \mathbf{V}$, the gate $\log f$, $\mathbf{H}_0$
+\ENSURE the chunk states $\mathbf{H}_{iC}$, in HBM (bf16)
 \STATE load $\mathbf{H}_0$
 \FOR{chunk $i = 0, \ldots, S/C - 1$}
 \STATE write $\mathbf{H}_{iC}$ to HBM (bf16) \COMMENT{the state at the start of every chunk}
 \STATE $\mathbf{H}_{(i+1)C} \gets \mathrm{diag}\!\left(\frac{F_{(i+1)C}}{F_{iC}}\right) \mathbf{H}_{iC} + \left(\mathbf{K}_{[i]} \odot \frac{F_{(i+1)C}}{\boldsymbol F_{[i]}}\right)^\top \mathbf{V}_{[i]}$
 \ENDFOR
-\Statex \textit{gradient kernel}
+\hrule
+\Statex \textbf{Gradient kernel}
+\REQUIRE $\mathbf{Q}, \mathbf{K}, \mathbf{V}$, the gate $\log f$, the chunk states $\mathbf{H}_{iC}$, $\nabla_{\mathbf{Y}}\mathcal{L}$, $\nabla_{\mathbf{H}_S}\mathcal{L}$
+\ENSURE $\nabla_{\mathbf{Q}}\mathcal{L}, \nabla_{\mathbf{K}}\mathcal{L}, \nabla_{\mathbf{V}}\mathcal{L}, \nabla_{\log f}\mathcal{L}, \nabla_{\mathbf{H}_0}\mathcal{L}$
 \STATE load $\nabla_{\mathbf{H}_S}\mathcal{L}$ \COMMENT{fp32 $(N, K, V)$ VMEM scratch holding $\nabla_{\mathbf{H}_{(i+1)C}}\mathcal{L}$}
 \FOR{chunk $i = S/C - 1, \ldots, 0$ (reverse)}
 \FOR{each group of $G$ heads}

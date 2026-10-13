@@ -24,6 +24,17 @@ const blog = defineCollection({
     citationStyle: z.enum(['numeric', 'text']).optional().default('text'),
     bibliography: z.string().optional(),
     codeColor: z.enum(['pink', 'green']).optional().default('green'),
+    // external resources shown as pills under the byline (models, code, paper)
+    links: z
+      .array(
+        z.object({
+          label: z.string(),
+          href: z.string(),
+          // a short emoji or symbol drawn before the label
+          icon: z.string().optional(),
+        })
+      )
+      .optional(),
   }),
 });
 

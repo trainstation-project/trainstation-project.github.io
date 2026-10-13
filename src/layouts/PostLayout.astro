@@ -18,6 +18,12 @@ interface Author {
   equalAdvising?: boolean;
 }
 
+interface ResourceLink {
+  label: string;
+  href: string;
+  icon?: string;
+}
+
 interface Props {
   title: string;
   subtitle?: string;
@@ -28,9 +34,11 @@ interface Props {
   headings: Heading[];
   codeColor?: 'pink' | 'green';
   heroImage?: ImageMetadata;
+  // external resources shown as pills under the byline
+  links?: ResourceLink[];
 }
 
-const { title, subtitle, description, author, authors, affiliations, headings, codeColor, heroImage } = Astro.props;
+const { title, subtitle, description, author, authors, affiliations, headings, codeColor, heroImage, links } = Astro.props;
 // 'green' is the site default (--code-accent already resolves to it); 'pink' points
 // --code-accent at the original --accent pink instead, which is itself theme-aware.
 const codeAccentStyle = codeColor === 'pink' ? '--code-accent: var(--accent);' : undefined;
@@ -88,6 +96,16 @@ const titleAfterI = iIndex >= 0 ? title.slice(iIndex + 1) : '';
       )}
       {authors && authors.some((a) => a.equalAdvising) && (
         <p class="article-affiliations">* Equal advising</p>
+      )}
+      {links && links.length > 0 && (
+        <nav class="article-links" aria-label="Resources">
+          {links.map((l) => (
+            <a class="article-link" href={l.href} {...(/^https?:/.test(l.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+              {l.icon && <span class="article-link-icon" aria-hidden="true">{l.icon}</span>}
+              {l.label}
+            </a>
+          ))}
+        </nav>
       )}
       <div class="hero-controls">
         <ThemeToggle labelled />

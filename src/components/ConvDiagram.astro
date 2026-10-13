@@ -1,0 +1,70 @@
+---
+// Pipeline anatomy of a Mamba-2 / GLA layer; the conv stage is the subject of the post.
+---
+
+<div class="conv-diagram" role="img" aria-label="Layer anatomy: tokens are RMS-normed, go through a fused linear projection, then a short causal depthwise conv1d with SiLU, then the chunkwise mixer, then RMSNorm gated output projection.">
+  <div class="cd-box">x<sub>t</sub><br /><small>RMSNorm'd token</small></div>
+  <div class="cd-arrow" aria-hidden="true">→</div>
+  <div class="cd-box cd-mxu">fused Linear<br /><small>q,k,v,g — big matmul · MXU</small></div>
+  <div class="cd-arrow" aria-hidden="true">→</div>
+  <div class="cd-box cd-conv">short causal conv1d + SiLU<br /><small>depthwise, K=4 — <b>this post</b></small></div>
+  <div class="cd-arrow" aria-hidden="true">→</div>
+  <div class="cd-box cd-mxu">chunkwise SSD / GLA mixer<br /><small>matmul-rich · MXU</small></div>
+  <div class="cd-arrow" aria-hidden="true">→</div>
+  <div class="cd-box">RMSNorm ⊙ g<br /><small>→ out-projection</small></div>
+</div>
+
+<style>
+  .conv-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 30px 0;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  .cd-box {
+    padding: 10px 13px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--code-bg);
+    color: var(--ink);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .cd-box small {
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  .cd-mxu {
+    border-color: color-mix(in srgb, var(--accent-strong) 45%, var(--line));
+  }
+
+  .cd-conv {
+    border: 2px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--code-bg));
+  }
+
+  .cd-arrow {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 760px) {
+    .conv-diagram {
+      flex-direction: column;
+    }
+
+    .cd-arrow {
+      transform: rotate(90deg);
+    }
+  }
+</style>

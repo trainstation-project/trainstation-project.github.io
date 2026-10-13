@@ -1,0 +1,4205 @@
+{
+    "laxla": {
+        "height": 420,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    "jax lax.scan (XLA)",
+                    "pallas (shipped before)",
+                    "pallas (current)"
+                ],
+                "y": [
+                    6877.08,
+                    0,
+                    0
+                ],
+                "name": "regular XLA ops",
+                "marker": {
+                    "color": "#6d6860"
+                },
+                "hovertemplate": [
+                    "regular XLA ops<br>6877 µs<extra></extra>",
+                    null,
+                    null
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jax lax.scan (XLA)",
+                    "pallas (shipped before)",
+                    "pallas (current)"
+                ],
+                "y": [
+                    4987.36,
+                    0,
+                    0
+                ],
+                "name": "XLA VPU work",
+                "marker": {
+                    "color": "#7d5ba6"
+                },
+                "hovertemplate": [
+                    "XLA VPU work<br>4987 µs<extra></extra>",
+                    null,
+                    null
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jax lax.scan (XLA)",
+                    "pallas (shipped before)",
+                    "pallas (current)"
+                ],
+                "y": [
+                    2045.02,
+                    14.040000000000001,
+                    14.059999999999999
+                ],
+                "name": "DMA",
+                "marker": {
+                    "color": "#a8763e"
+                },
+                "hovertemplate": [
+                    "DMA<br>2045 µs (incl. layout churn)<extra></extra>",
+                    "DMA<br>14.0 µs<extra></extra>",
+                    "DMA<br>14.1 µs<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jax lax.scan (XLA)",
+                    "pallas (shipped before)",
+                    "pallas (current)"
+                ],
+                "y": [
+                    0,
+                    697.5,
+                    465.36
+                ],
+                "name": "Mosaic kernel (MXU+VPU)",
+                "marker": {
+                    "color": "#176b64"
+                },
+                "hovertemplate": [
+                    null,
+                    "Mosaic kernel<br>697.5 µs<extra></extra>",
+                    "Mosaic kernel<br>465.4 µs<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jax lax.scan (XLA)",
+                    "pallas (shipped before)",
+                    "pallas (current)"
+                ],
+                "y": [
+                    22077.109399634995,
+                    0,
+                    0
+                ],
+                "name": "host dispatch gap",
+                "marker": {
+                    "color": "#d8d0c4"
+                },
+                "hovertemplate": [
+                    "host dispatch gap<br>22077 µs — the 4096-step scan is host-bound<extra></extra>",
+                    null,
+                    null
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "scatter",
+                "mode": "text",
+                "x": [
+                    "jax lax.scan (XLA)",
+                    "pallas (shipped before)",
+                    "pallas (current)"
+                ],
+                "y": [
+                    35986.569399634995,
+                    711.66,
+                    479.54
+                ],
+                "text": [
+                    "35 987 µs",
+                    "714 µs",
+                    "487 µs"
+                ],
+                "textposition": "top center",
+                "textfont": {
+                    "size": 11,
+                    "color": "#161513"
+                },
+                "showlegend": false,
+                "hoverinfo": "skip"
+            }
+        ],
+        "layout": {
+            "barmode": "stack",
+            "xaxis": {
+                "title": "bench stack"
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "time / call (µs, log scale)"
+            }
+        }
+    },
+    "laladder": {
+        "height": 380,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    "loads + store",
+                    "+ state dots<br>(kᵀv · qh)",
+                    "+ intra dots<br>(qk · qk·v)",
+                    "+ causal mask",
+                    "+ scalar gate exps"
+                ],
+                "y": [
+                    495.51749136298895,
+                    51.14649888128042,
+                    69.38288919627666,
+                    10.62250230461359,
+                    81.13049902021885
+                ],
+                "text": [
+                    "495.5 µs",
+                    "51.1 µs",
+                    "69.4 µs",
+                    "10.6 µs",
+                    "81.1 µs"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10
+                },
+                "marker": {
+                    "color": [
+                        "#6d6860",
+                        "#176b64",
+                        "#176b64",
+                        "#a8763e",
+                        "#a33e2d"
+                    ]
+                },
+                "hovertemplate": [
+                    "loads + store<br>+495.5 µs (cumulative 495.5 µs)<extra></extra>",
+                    "+ state dots<br>(kᵀv · qh)<br>+51.1 µs (cumulative 546.7 µs)<extra></extra>",
+                    "+ intra dots<br>(qk · qk·v)<br>+69.4 µs (cumulative 616.0 µs)<extra></extra>",
+                    "+ causal mask<br>+10.6 µs (cumulative 626.7 µs)<extra></extra>",
+                    "+ scalar gate exps<br>+81.1 µs (cumulative 707.8 µs)<extra></extra>"
+                ],
+                "showlegend": false
+            }
+        ],
+        "layout": {
+            "xaxis": {
+                "title": "ablation step (cumulative)"
+            },
+            "yaxis": {
+                "title": "cumulative device µs (bf16, pre-optimization kernel)",
+                "range": [
+                    0,
+                    800
+                ]
+            },
+            "shapes": [
+                {
+                    "type": "line",
+                    "x0": -0.5,
+                    "x1": 4.5,
+                    "y0": 495.51749136298895,
+                    "y1": 495.51749136298895,
+                    "line": {
+                        "color": "#6d6860",
+                        "dash": "dot",
+                        "width": 1.4
+                    }
+                },
+                {
+                    "type": "line",
+                    "x0": -0.5,
+                    "x1": 4.5,
+                    "y0": 112.2875816993464,
+                    "y1": 112.2875816993464,
+                    "line": {
+                        "color": "#176b64",
+                        "dash": "dot",
+                        "width": 1.4
+                    }
+                },
+                {
+                    "type": "line",
+                    "x0": -0.5,
+                    "x1": 4.5,
+                    "y0": 458.4103512014788,
+                    "y1": 458.4103512014788,
+                    "line": {
+                        "color": "#a8763e",
+                        "dash": "dot",
+                        "width": 1.4
+                    }
+                }
+            ],
+            "annotations": [
+                {
+                    "x": 4.45,
+                    "y": 453.51749136298895,
+                    "text": "measured loads floor 496 µs",
+                    "showarrow": false,
+                    "xanchor": "right",
+                    "font": {
+                        "size": 10.5,
+                        "color": "#6d6860"
+                    }
+                },
+                {
+                    "x": 4.45,
+                    "y": 134.2875816993464,
+                    "text": "MXU floor 112 µs (103.1 GF @ 918 TF/s)",
+                    "showarrow": false,
+                    "xanchor": "right",
+                    "font": {
+                        "size": 10.5,
+                        "color": "#176b64"
+                    }
+                },
+                {
+                    "x": 4.45,
+                    "y": 480.4103512014788,
+                    "text": "stream-ideal 458 µs (545.6 MB @ 1.19 TB/s measured copy)",
+                    "showarrow": false,
+                    "xanchor": "right",
+                    "font": {
+                        "size": 10.5,
+                        "color": "#a8763e"
+                    }
+                }
+            ]
+        }
+    },
+    "laopt": {
+        "height": 380,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    "ungated (BS 256)",
+                    "scalar gate (BS 256)",
+                    "scalar gate @ BS 512 · rejected",
+                    "diagonal gate (BS 256)"
+                ],
+                "y": [
+                    626.7300900071859,
+                    714.1057820990682,
+                    779.5226806774735,
+                    1169.3160701543093
+                ],
+                "name": "shipped before (per-head loop kernel)",
+                "marker": {
+                    "color": "rgba(0,0,0,0)",
+                    "line": {
+                        "color": "#a33e2d",
+                        "width": 1.6
+                    }
+                },
+                "text": [
+                    "627",
+                    "714",
+                    "780",
+                    "1169"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 11
+                },
+                "hovertemplate": [
+                    "shipped before · 626.7 µs<extra></extra>",
+                    "shipped before · 714.1 µs<extra></extra>",
+                    "shipped before · 779.5 µs<extra></extra>",
+                    "shipped before · 1169.3 µs<extra></extra>"
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "ungated (BS 256)",
+                    "scalar gate (BS 256)",
+                    "scalar gate @ BS 512 · rejected",
+                    "diagonal gate (BS 256)"
+                ],
+                "y": [
+                    484.8479898646474,
+                    487.2548906132579,
+                    590.9133795648813,
+                    724.7177790850401
+                ],
+                "name": "current (head-group batched dots)",
+                "marker": {
+                    "color": [
+                        "#176b64",
+                        "#176b64",
+                        "#6d6860",
+                        "#a8763e"
+                    ]
+                },
+                "text": [
+                    "485",
+                    "487",
+                    "591",
+                    "725"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 11
+                },
+                "hovertemplate": [
+                    "current · 484.8 µs<extra></extra>",
+                    "current · 487.3 µs<extra></extra>",
+                    "current · 590.9 µs<extra></extra>",
+                    "current · 724.7 µs<extra></extra>"
+                ]
+            }
+        ],
+        "layout": {
+            "barmode": "group",
+            "xaxis": {
+                "title": "gating config"
+            },
+            "yaxis": {
+                "title": "µs · 100 iters · bf16",
+                "range": [
+                    0,
+                    1380
+                ]
+            },
+            "annotations": [
+                {
+                    "x": 0,
+                    "y": 756.7300900071859,
+                    "text": "-22.6% (bit-exact)",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#176b64"
+                    }
+                },
+                {
+                    "x": 1,
+                    "y": 844.1057820990682,
+                    "text": "-31.8% (bit-exact)",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#176b64"
+                    }
+                },
+                {
+                    "x": 2,
+                    "y": 909.5226806774735,
+                    "text": "-24.2% — doubles intra FLOPs; rejected",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#6d6860"
+                    }
+                },
+                {
+                    "x": 3,
+                    "y": 1299.3160701543093,
+                    "text": "-38.0% — fused in-kernel scan (round 2)",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#a8763e"
+                    }
+                }
+            ]
+        }
+    },
+    "laroof": {
+        "height": 430,
+        "traces": [
+            {
+                "x": [
+                    1,
+                    1.2499011656689065,
+                    1.5622529239404914,
+                    1.952661750702878,
+                    2.4406341983606152,
+                    3.05055152950233,
+                    3.8128879126580286,
+                    4.765733046596154,
+                    5.956695290207362,
+                    7.445280386764669,
+                    9.305864634149005,
+                    11.631411053779896,
+                    14.5381142344937,
+                    18.171205928321395,
+                    22.71221147141866,
+                    28.388019593044902,
+                    35.48221878037857,
+                    44.34926661411435,
+                    55.43220003754266,
+                    69.28477144251656,
+                    86.5991165891052,
+                    108.24033677062015,
+                    135.28972310199316,
+                    169.09878260820489,
+                    211.35676549518834,
+                    264.17506756444567,
+                    330.19272488946257,
+                    412.7082717347319,
+                    515.8445499224414,
+                    644.7547042520121,
+                    805.8796564151012,
+                    1007.2699219420921,
+                    1258.9878495786497,
+                    1573.6103807513446,
+                    1966.8574492097978,
+                    2458.377418471899,
+                    3072.7288010021443,
+                    3840.607310156999,
+                    4800.379553841758,
+                    6000
+                ],
+                "y": [
+                    1.1902,
+                    1.4876323673791325,
+                    1.8593934300739727,
+                    2.3240580156865653,
+                    2.904842822888804,
+                    3.630766430413673,
+                    4.538099193645586,
+                    5.672175472058742,
+                    7.089658734404802,
+                    8.861372716327308,
+                    11.075840087564146,
+                    13.84370543620883,
+                    17.3032635618944,
+                    21.627369295888123,
+                    27.032074093282485,
+                    33.78742091964204,
+                    42.23093679240657,
+                    52.78449712411889,
+                    65.97540448468327,
+                    82.4627349708832,
+                    103.070268564353,
+                    128.8276488243921,
+                    161.02182843599226,
+                    201.26137106028546,
+                    251.55682229237314,
+                    314.42116541520323,
+                    392.9953811634383,
+                    491.2053850186779,
+                    613.9581833176896,
+                    767.3870490007447,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918
+                ],
+                "mode": "lines",
+                "line": {
+                    "color": "#6d6860",
+                    "width": 2,
+                    "dash": "dash"
+                },
+                "name": "v6e roofline (1.19 TB/s measured copy · 918 TF/s MXU)",
+                "hovertemplate": "v6e roofline (1.19 TB/s measured copy · 918 TF/s MXU)<br>AI %{x:.0f} FLOP/B → %{y:.0f} TF/s<extra></extra>",
+                "showlegend": false
+            },
+            {
+                "x": [
+                    1,
+                    1.2499011656689065,
+                    1.5622529239404914,
+                    1.952661750702878,
+                    2.4406341983606152,
+                    3.05055152950233,
+                    3.8128879126580286,
+                    4.765733046596154,
+                    5.956695290207362,
+                    7.445280386764669,
+                    9.305864634149005,
+                    11.631411053779896,
+                    14.5381142344937,
+                    18.171205928321395,
+                    22.71221147141866,
+                    28.388019593044902,
+                    35.48221878037857,
+                    44.34926661411435,
+                    55.43220003754266,
+                    69.28477144251656,
+                    86.5991165891052,
+                    108.24033677062015,
+                    135.28972310199316,
+                    169.09878260820489,
+                    211.35676549518834,
+                    264.17506756444567,
+                    330.19272488946257,
+                    412.7082717347319,
+                    515.8445499224414,
+                    644.7547042520121,
+                    805.8796564151012,
+                    1007.2699219420921,
+                    1258.9878495786497,
+                    1573.6103807513446,
+                    1966.8574492097978,
+                    2458.377418471899,
+                    3072.7288010021443,
+                    3840.607310156999,
+                    4800.379553841758,
+                    6000
+                ],
+                "y": [
+                    1.456,
+                    1.819856097213928,
+                    2.2746402572573556,
+                    2.8430755090233903,
+                    3.553563392813056,
+                    4.441603026955392,
+                    5.551564800830089,
+                    6.938907315843999,
+                    8.672948342541918,
+                    10.840328243129358,
+                    13.549338907320951,
+                    16.93533449430353,
+                    21.167494325422826,
+                    26.45727583163595,
+                    33.068979902385564,
+                    41.33295652747338,
+                    51.66211054423119,
+                    64.5725321901505,
+                    80.70928325466211,
+                    100.87862722030411,
+                    126.08831375373715,
+                    157.59793033802293,
+                    196.98183683650203,
+                    246.20782747754632,
+                    307.7354505609942,
+                    384.6388983738329,
+                    480.7606074390575,
+                    600.9032436457696,
+                    751.0696646870747,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918,
+                    918
+                ],
+                "mode": "lines",
+                "line": {
+                    "color": "#d8d0c4",
+                    "width": 1.6,
+                    "dash": "dot"
+                },
+                "name": "previously cited roofline (1.456 TB/s — superseded, never measured on this VM)",
+                "hovertemplate": "previously cited roofline (1.456 TB/s — superseded, never measured on this VM)<br>AI %{x:.0f} FLOP/B → %{y:.0f} TF/s<extra></extra>",
+                "showlegend": false
+            },
+            {
+                "x": [
+                    189.046,
+                    188.955,
+                    95.233,
+                    126.68
+                ],
+                "y": [
+                    212.601,
+                    211.551,
+                    107.148,
+                    142.234
+                ],
+                "mode": "markers",
+                "marker": {
+                    "size": 7.2,
+                    "color": [
+                        "rgba(23,107,100,0)",
+                        "#176b64",
+                        "#176b64",
+                        "#176b64"
+                    ],
+                    "symbol": [
+                        "circle-open",
+                        "circle",
+                        "circle",
+                        "square"
+                    ],
+                    "line": {
+                        "color": "#176b64",
+                        "width": 1.5
+                    }
+                },
+                "name": "pallas forward (current)",
+                "hovertemplate": [
+                    "ungated bf16 — current<br>AI 189 FLOP/B · 212.6 TF/s<extra></extra>",
+                    "scalar gate bf16 — current<br>AI 189 FLOP/B · 211.6 TF/s<extra></extra>",
+                    "scalar gate fp32 — current<br>AI 95 FLOP/B · 107.1 TF/s<extra></extra>",
+                    "diagonal gate bf16 — current (fused scan)<br>AI 127 FLOP/B · 142.2 TF/s<extra></extra>"
+                ],
+                "showlegend": false
+            },
+            {
+                "x": [
+                    189.046,
+                    188.955,
+                    95.233,
+                    178.087
+                ],
+                "y": [
+                    164.471,
+                    144.347,
+                    107.586,
+                    88.153
+                ],
+                "mode": "markers",
+                "marker": {
+                    "size": 8.6,
+                    "color": "rgba(23,107,100,0.0)",
+                    "symbol": "circle-open",
+                    "line": {
+                        "color": "#176b64",
+                        "width": 1.6
+                    }
+                },
+                "name": "pallas forward (before)",
+                "hovertemplate": [
+                    "ungated bf16 — before<br>AI 189 FLOP/B · 164.5 TF/s<extra></extra>",
+                    "scalar gate bf16 — before<br>AI 189 FLOP/B · 144.3 TF/s<extra></extra>",
+                    "scalar gate fp32 — before<br>AI 95 FLOP/B · 107.6 TF/s<extra></extra>",
+                    "diagonal bf16 — before (loop kernel)<br>AI 178 FLOP/B · 88.2 TF/s<extra></extra>"
+                ],
+                "showlegend": false
+            },
+            {
+                "x": [
+                    62.97606005865103
+                ],
+                "y": [
+                    0.9547933837880225
+                ],
+                "mode": "markers",
+                "marker": {
+                    "size": 7.8,
+                    "color": "#a33e2d",
+                    "symbol": "x"
+                },
+                "name": "XLA lax.scan",
+                "hovertemplate": "XLA lax.scan<br>AI 63 FLOP/B · 0.95 TF/s (35.27 ms)<extra></extra>",
+                "showlegend": false
+            },
+            {
+                "x": [
+                    170.593
+                ],
+                "y": [
+                    2.282384815940408
+                ],
+                "mode": "markers",
+                "marker": {
+                    "size": 7.8,
+                    "color": "#a33e2d",
+                    "symbol": "cross"
+                },
+                "name": "XLA unrolled reference",
+                "hovertemplate": "XLA unrolled reference (S=512)<br>2.28 TF/s (5.65 ms)<extra></extra>",
+                "showlegend": false
+            },
+            {
+                "x": [
+                    189.046,
+                    189.046,
+                    null,
+                    188.955,
+                    188.955,
+                    null,
+                    95.233,
+                    95.233,
+                    null,
+                    178.087,
+                    126.68,
+                    null
+                ],
+                "y": [
+                    164.471,
+                    212.601,
+                    null,
+                    144.347,
+                    211.551,
+                    null,
+                    107.586,
+                    107.148,
+                    null,
+                    88.153,
+                    142.234,
+                    null
+                ],
+                "mode": "lines",
+                "line": {
+                    "color": "#176b64",
+                    "width": 1.2,
+                    "dash": "dot"
+                },
+                "showlegend": false,
+                "hoverinfo": "skip",
+                "opacity": 0.55
+            },
+            {
+                "type": "scatter",
+                "mode": "lines",
+                "x": [
+                    886.9937825575533
+                ],
+                "y": [
+                    807.84
+                ],
+                "showlegend": false,
+                "hoverinfo": "skip"
+            }
+        ],
+        "layout": {
+            "xaxis": {
+                "type": "log",
+                "title": "arithmetic intensity (FLOP/byte)"
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "achieved TFLOP/s"
+            },
+            "showlegend": false
+        }
+    },
+    "laops": {
+        "height": 360,
+        "traces": [
+            {
+                "y": [
+                    "XLA lax.scan (S 4096)"
+                ],
+                "x": [
+                    34385.4
+                ],
+                "type": "bar",
+                "orientation": "h",
+                "name": "serial scan while-loop span — all 4096 steps inside <i>(control)</i>",
+                "marker_color": "#6d6860",
+                "hovertemplate": "<b>while.1</b> — one serial scan loop span<br><b>time</b>: 34,385 µs/call<br><b>wall</b>: 35,987 µs — the loop itself is the cost<br>all per-step fusion work executes inside this span<extra></extra>"
+            },
+            {
+                "y": [
+                    "XLA reference (S 512)"
+                ],
+                "x": [
+                    3192.8
+                ],
+                "type": "bar",
+                "orientation": "h",
+                "name": "recurrence span — unrolled source lowers to a serial while <i>(control)</i>",
+                "marker_color": "#6d6860",
+                "hovertemplate": "<b>while.1</b> — the whole 512-step recurrence, serialized<br><b>time</b>: 3,193 µs/call<br><b>wall</b>: 5,645 µs (trace captured one call)<br>step fusions (3,132 µs, VPU) execute inside this span<extra></extra>"
+            },
+            {
+                "y": [
+                    "pallas (pre-opt)"
+                ],
+                "x": [
+                    697.5
+                ],
+                "type": "bar",
+                "orientation": "h",
+                "name": "XMA pallas kernel v1 — per-head loop <i>(MXU+VPU)</i>",
+                "legendgroup": "preopt",
+                "marker": {
+                    "color": "rgba(0,0,0,0)",
+                    "line": {
+                        "color": "#2f6f4f",
+                        "width": 1.4,
+                        "dash": "dash"
+                    }
+                },
+                "hovertemplate": "<b>kernel v1</b> — one head per cell, 16-iteration loop<br><b>time</b>: 697.5 µs<br><b>bandwidth</b>: 0.769 TB/s<extra></extra>"
+            },
+            {
+                "y": [
+                    "pallas (pre-opt)"
+                ],
+                "x": [
+                    14.059999999999999
+                ],
+                "type": "bar",
+                "orientation": "h",
+                "name": "gate chunk-cumsum prologue (reduce-window + copies) <i>(DMA)</i>",
+                "legendgroup": "prologue",
+                "marker_color": "#b98a2e",
+                "hovertemplate": "<b>reduce-window + copies</b> — scalar gate's fp32 chunk cumsum, host-side<br><b>time</b>: 14.1 µs → absorbed into the kernel only by the diagonal fusion (round 2)<extra></extra>"
+            },
+            {
+                "y": [
+                    "XMA pallas"
+                ],
+                "x": [
+                    465.4
+                ],
+                "type": "bar",
+                "orientation": "h",
+                "name": "XMA pallas batched kernel — head-group G=4 <i>(MXU+VPU)</i>",
+                "legendgroup": "now",
+                "marker_color": "#2f6f4f",
+                "hovertemplate": "<b>custom call</b> — head-group batched kernel<br><b>time</b>: 465.4 µs<br><b>bandwidth</b>: 1.120 TB/s logical<extra></extra>"
+            },
+            {
+                "y": [
+                    "XMA pallas"
+                ],
+                "x": [
+                    14.059999999999999
+                ],
+                "type": "bar",
+                "orientation": "h",
+                "name": "gate chunk-cumsum prologue (reduce-window + copies) <i>(DMA)</i>",
+                "legendgroup": "prologue",
+                "marker_color": "#b98a2e",
+                "showlegend": false,
+                "hovertemplate": "<b>reduce-window + copies</b> — scalar gate's fp32 chunk cumsum, host-side<br><b>time</b>: 14.1 µs<extra></extra>"
+            },
+            {
+                "y": [
+                    "XMA pallas diagonal"
+                ],
+                "x": [
+                    729.1
+                ],
+                "type": "bar",
+                "orientation": "h",
+                "name": "XMA pallas diagonal kernel — fused in-kernel scan <i>(MXU+VPU)</i>",
+                "legendgroup": "diag",
+                "marker_color": "#2f6f4f",
+                "hovertemplate": "<b>custom call</b> — per-head-diagonal batched kernel, chunk scan fused in-kernel (round 2)<br><b>time</b>: 729.1 µs, one call, no host prologue<br><b>bandwidth</b>: 1.1178 TB/s honest-accounted<extra></extra>"
+            }
+        ],
+        "layout": {
+            "barmode": "stack",
+            "xaxis": {
+                "title": "µs / call"
+            },
+            "yaxis": {
+                "type": "category",
+                "categoryorder": "array",
+                "categoryarray": [
+                    "XMA pallas diagonal",
+                    "XMA pallas",
+                    "pallas (pre-opt)",
+                    "XLA reference (S 512)",
+                    "XLA lax.scan (S 4096)"
+                ],
+                "title": "bench stack"
+            },
+            "annotations": [
+                {
+                    "x": 34385.4,
+                    "y": "XLA lax.scan (S 4096)",
+                    "xref": "x",
+                    "yref": "y",
+                    "text": "  34,385 µs",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    },
+                    "xanchor": "left"
+                },
+                {
+                    "x": 3192.8,
+                    "y": "XLA reference (S 512)",
+                    "xref": "x",
+                    "yref": "y",
+                    "text": "  3,193 µs",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    },
+                    "xanchor": "left"
+                },
+                {
+                    "x": 711.56,
+                    "y": "pallas (pre-opt)",
+                    "xref": "x",
+                    "yref": "y",
+                    "text": "  712 µs",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    },
+                    "xanchor": "left"
+                },
+                {
+                    "x": 479.46,
+                    "y": "XMA pallas",
+                    "xref": "x",
+                    "yref": "y",
+                    "text": "  479 µs",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    },
+                    "xanchor": "left"
+                },
+                {
+                    "x": 729.1,
+                    "y": "XMA pallas diagonal",
+                    "xref": "x",
+                    "yref": "y",
+                    "text": "  729 µs",
+                    "showarrow": false,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    },
+                    "xanchor": "left"
+                }
+            ],
+            "margin": {
+                "l": 10
+            }
+        }
+    },
+    "laopscmp": {
+        "height": 340,
+        "traces": [
+            {
+                "type": "bar",
+                "orientation": "v",
+                "x": [
+                    "scan while span\nXLA lax.scan",
+                    "recurrence span\nXLA reference, S 512",
+                    "XMA pallas kernel\nbefore, per-head loop",
+                    "gate cumsum prologue\nreduce-window + copies",
+                    "XMA pallas kernel\ncurrent, head-group 4",
+                    "XMA pallas diagonal\nfused scan (round 2)"
+                ],
+                "y": [
+                    34385.4,
+                    3192.8,
+                    697.5,
+                    14.059999999999999,
+                    465.4,
+                    729.1
+                ],
+                "marker": {
+                    "color": [
+                        "#6d6860",
+                        "#6d6860",
+                        "#a33e2d",
+                        "#b98a2e",
+                        "#2f6f4f",
+                        "#176b64"
+                    ]
+                },
+                "text": [
+                    "34,385 µs",
+                    "3,193 µs",
+                    "698 µs",
+                    "14 µs",
+                    "465 µs",
+                    "729 µs"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10.5,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    "one serial scan loop span — all 4096 steps inside<br><b>time</b>: 34,385 µs (wall 35,987 µs: the loop is the cost)<extra></extra>",
+                    "whole 512-step recurrence, serialized (unrolled source lowers to a while)<br><b>time</b>: 3,193 µs (wall 5,645 µs)<extra></extra>",
+                    "kernel v1<br><b>time</b>: 697.5 µs<extra></extra>",
+                    "scalar gate's host-side fp32 chunk cumsum<br><b>time</b>: 14.1 µs<extra></extra>",
+                    "batched kernel<br><b>time</b>: 465.4 µs<extra></extra>",
+                    "one fused custom call, no host prologue<br><b>time</b>: 729.1 µs<extra></extra>"
+                ],
+                "showlegend": false
+            }
+        ],
+        "layout": {
+            "yaxis": {
+                "type": "log",
+                "title": "device-attributed µs per call (XProf, log scale)"
+            },
+            "margin": {
+                "b": 100,
+                "l": 64
+            }
+        }
+    },
+    "laspeed": {
+        "height": 340,
+        "traces": [
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "jnp.copy",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    1.4586,
+                    null,
+                    null,
+                    null
+                ],
+                "marker": {
+                    "color": "#b98a2e"
+                },
+                "text": [
+                    "1.46",
+                    "",
+                    "",
+                    ""
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": "<b>jnp.copy</b><br><b>bandwidth</b>: 1.4586 TB/s<br><b>wallclock</b>: 184.0 µs<extra></extra>",
+                "offsetgroup": "roof",
+                "width": 0.17,
+                "offset": -0.085
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "naive",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.005436882609259241,
+                    0.007980775103376279,
+                    0.008946048256405858
+                ],
+                "marker": {
+                    "color": "#a33e2d",
+                    "symbol": "diamond"
+                },
+                "text": [
+                    "",
+                    "0.005",
+                    "0.008",
+                    "0.009"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>naive</b><br><b>bandwidth</b>: 0.0054 TB/s<br><b>wallclock</b>: 100.29 ms<br><b>speedup vs naive</b>: 1.00×<extra></extra>",
+                    "<b>naive</b><br><b>bandwidth</b>: 0.0080 TB/s<br><b>wallclock</b>: 68.58 ms<br><b>speedup vs naive</b>: 1.00×<extra></extra>",
+                    "<b>naive</b><br><b>bandwidth</b>: 0.0089 TB/s<br><b>wallclock</b>: 90.96 ms<br><b>speedup vs naive</b>: 1.00×<extra></extra>"
+                ],
+                "offsetgroup": "naive"
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "jax.lax.scan",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.016356428016474633,
+                    0.015049219627671421,
+                    0.01734483927627428
+                ],
+                "marker": {
+                    "color": "#c2683a",
+                    "symbol": "circle"
+                },
+                "text": [
+                    "",
+                    "0.016",
+                    "0.015",
+                    "0.017"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>jax.lax.scan</b><br><b>bandwidth</b>: 0.0164 TB/s<br><b>wallclock</b>: 33.34 ms<br><b>speedup vs naive</b>: 3.01×<extra></extra>",
+                    "<b>jax.lax.scan</b><br><b>bandwidth</b>: 0.0150 TB/s<br><b>wallclock</b>: 36.37 ms<br><b>speedup vs naive</b>: 1.89×<extra></extra>",
+                    "<b>jax.lax.scan</b><br><b>bandwidth</b>: 0.0173 TB/s<br><b>wallclock</b>: 46.91 ms<br><b>speedup vs naive</b>: 1.94×<extra></extra>"
+                ],
+                "offsetgroup": "scan"
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "chunked JAX",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.22081542137447857,
+                    0.2039255884654074,
+                    0.15840194981409023
+                ],
+                "marker": {
+                    "color": "#7d5ba6",
+                    "symbol": "square"
+                },
+                "text": [
+                    "",
+                    "0.22",
+                    "0.20",
+                    "0.16"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.2208 TB/s<br><b>wallclock</b>: 2469.3 µs<br><b>speedup vs naive</b>: 40.61×<extra></extra>",
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.2039 TB/s<br><b>wallclock</b>: 2684.1 µs<br><b>speedup vs naive</b>: 25.55×<extra></extra>",
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.1584 TB/s<br><b>wallclock</b>: 5136.9 µs<br><b>speedup vs naive</b>: 17.71×<extra></extra>"
+                ],
+                "offsetgroup": "chunked"
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "FLAT",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    1.4166264484281632,
+                    1.2496727671232877,
+                    1.4799835867588216
+                ],
+                "marker": {
+                    "color": "#2f6f4f",
+                    "symbol": "square"
+                },
+                "text": [
+                    "",
+                    "1.42",
+                    "1.25",
+                    "1.48"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.4166 TB/s<br><b>wallclock</b>: 384.9 µs<br><b>speedup vs naive</b>: 260.56×<br><b>speedup vs chunked JAX</b>: 6.42×<extra></extra>",
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.2497 TB/s<br><b>wallclock</b>: 438.0 µs<br><b>speedup vs naive</b>: 156.59×<br><b>speedup vs chunked JAX</b>: 6.13×<extra></extra>",
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.4800 TB/s<br><b>wallclock</b>: 549.8 µs<br><b>speedup vs naive</b>: 165.43×<br><b>speedup vs chunked JAX</b>: 9.34×<extra></extra>"
+                ],
+                "offsetgroup": "flat"
+            }
+        ],
+        "layout": {
+            "barmode": "group",
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "bandwidth (log TB/s)"
+            },
+            "margin": {
+                "b": 64,
+                "l": 64,
+                "t": 96
+            },
+            "bargap": 0.32
+        }
+    },
+    "lafwd_none": {
+        "height": 330,
+        "traces": [
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "naive",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    6226.184242404997,
+                    11853.373697958887,
+                    23615.84911122918,
+                    47110.768309794366,
+                    94451.45720150322
+                ],
+                "line": {
+                    "color": "#a33e2d",
+                    "dash": "dot",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#a33e2d",
+                    "symbol": "diamond",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 6.226 ms<br><b>compute</b>: 1.03 TF/s<br><b>logical BW</b>: 0.007 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 11.85 ms<br><b>compute</b>: 1.09 TF/s<br><b>logical BW</b>: 0.006 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 23.62 ms<br><b>compute</b>: 1.09 TF/s<br><b>logical BW</b>: 0.006 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 47.11 ms<br><b>compute</b>: 1.09 TF/s<br><b>logical BW</b>: 0.006 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 94.45 ms<br><b>compute</b>: 1.09 TF/s<br><b>logical BW</b>: 0.006 TB/s<br>one measured run (wall)<extra></extra>"
+                ]
+            },
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "jax.lax.scan",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    1637.0934123794239,
+                    3221.273267020782,
+                    7805.589741716783,
+                    16406.819379578035,
+                    32867.259345948696
+                ],
+                "line": {
+                    "color": "#c2683a",
+                    "dash": "solid",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#c2683a",
+                    "symbol": "circle",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 1.637 ms<br><b>compute</b>: 3.94 TF/s<br><b>logical BW</b>: 0.026 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 3.221 ms<br><b>compute</b>: 4.00 TF/s<br><b>logical BW</b>: 0.023 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 7.806 ms<br><b>compute</b>: 3.30 TF/s<br><b>logical BW</b>: 0.018 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 16.41 ms<br><b>compute</b>: 3.14 TF/s<br><b>logical BW</b>: 0.017 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 32.87 ms<br><b>compute</b>: 3.14 TF/s<br><b>logical BW</b>: 0.017 TB/s<br>one measured run (wall)<extra></extra>"
+                ]
+            },
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "FLAT",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    34.1,
+                    64.6,
+                    116,
+                    222.7,
+                    429.5
+                ],
+                "line": {
+                    "color": "#2f6f4f",
+                    "dash": "solid",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#2f6f4f",
+                    "symbol": "square",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 34.1 µs<br><b>payload BW</b>: 0.985 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 64.6 µs<br><b>payload BW</b>: 1.040 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 116.0 µs<br><b>payload BW</b>: 1.158 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 222.7 µs<br><b>payload BW</b>: 1.207 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 429.5 µs<br><b>payload BW</b>: 1.251 TB/s"
+                ]
+            }
+        ],
+        "layout": {
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "xaxis": {
+                "type": "log",
+                "title": "sequence length S (log scale)",
+                "tickvals": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "ticktext": [
+                    "256",
+                    "512",
+                    "1024",
+                    "2048",
+                    "4096"
+                ]
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "wall / call (log scale)"
+            },
+            "margin": {
+                "b": 64,
+                "l": 64,
+                "t": 44
+            }
+        }
+    },
+    "lafwd_scalar": {
+        "height": 330,
+        "traces": [
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "naive",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    3083.5414212197065,
+                    5645.36786172539,
+                    11236.389121040702,
+                    21261.213361285627,
+                    42039.57505058497
+                ],
+                "line": {
+                    "color": "#a33e2d",
+                    "dash": "dot",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#a33e2d",
+                    "symbol": "diamond",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 3.084 ms<br><b>compute</b>: 2.09 TF/s<br><b>logical BW</b>: 0.014 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 5.645 ms<br><b>compute</b>: 2.28 TF/s<br><b>logical BW</b>: 0.013 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 11.24 ms<br><b>compute</b>: 2.29 TF/s<br><b>logical BW</b>: 0.013 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 21.26 ms<br><b>compute</b>: 2.42 TF/s<br><b>logical BW</b>: 0.013 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 42.04 ms<br><b>compute</b>: 2.45 TF/s<br><b>logical BW</b>: 0.013 TB/s<br>one measured run (wall)<extra></extra>"
+                ]
+            },
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "jax.lax.scan",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    1665.1232726871967,
+                    3298.889690389236,
+                    7974.0032864113655,
+                    16682.7030479908,
+                    35986.569399634995
+                ],
+                "line": {
+                    "color": "#c2683a",
+                    "dash": "solid",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#c2683a",
+                    "symbol": "circle",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 1.665 ms<br><b>compute</b>: 3.87 TF/s<br><b>logical BW</b>: 0.025 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 3.299 ms<br><b>compute</b>: 3.91 TF/s<br><b>logical BW</b>: 0.023 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 7.974 ms<br><b>compute</b>: 3.23 TF/s<br><b>logical BW</b>: 0.018 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 16.68 ms<br><b>compute</b>: 3.09 TF/s<br><b>logical BW</b>: 0.017 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 35.99 ms<br><b>compute</b>: 2.86 TF/s<br><b>logical BW</b>: 0.015 TB/s<br>one measured run (wall)<extra></extra>"
+                ]
+            },
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "FLAT",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    37.9,
+                    72.1,
+                    130.3,
+                    247.4,
+                    481.3
+                ],
+                "line": {
+                    "color": "#2f6f4f",
+                    "dash": "solid",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#2f6f4f",
+                    "symbol": "square",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 37.9 µs<br><b>payload BW</b>: 0.886 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 72.1 µs<br><b>payload BW</b>: 0.932 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 130.3 µs<br><b>payload BW</b>: 1.031 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 247.4 µs<br><b>payload BW</b>: 1.086 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 481.3 µs<br><b>payload BW</b>: 1.117 TB/s"
+                ]
+            }
+        ],
+        "layout": {
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "xaxis": {
+                "type": "log",
+                "title": "sequence length S (log scale)",
+                "tickvals": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "ticktext": [
+                    "256",
+                    "512",
+                    "1024",
+                    "2048",
+                    "4096"
+                ]
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "wall / call (log scale)"
+            },
+            "margin": {
+                "b": 64,
+                "l": 64,
+                "t": 44
+            }
+        }
+    },
+    "lafwd_diagonal": {
+        "height": 330,
+        "traces": [
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "naive",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    5796.199850738049,
+                    11381.912413053215,
+                    23890.4101960361,
+                    44802.40636970848,
+                    90020.00243868679
+                ],
+                "line": {
+                    "color": "#a33e2d",
+                    "dash": "dot",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#a33e2d",
+                    "symbol": "diamond",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 5.796 ms<br><b>compute</b>: 1.11 TF/s<br><b>logical BW</b>: 0.010 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 11.38 ms<br><b>compute</b>: 1.13 TF/s<br><b>logical BW</b>: 0.010 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 23.89 ms<br><b>compute</b>: 1.08 TF/s<br><b>logical BW</b>: 0.009 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 44.80 ms<br><b>compute</b>: 1.15 TF/s<br><b>logical BW</b>: 0.009 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>naive</b> — unrolled static loop; compiles only up to S=512<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 90.02 ms<br><b>compute</b>: 1.15 TF/s<br><b>logical BW</b>: 0.009 TB/s<br>one measured run (wall)<extra></extra>"
+                ]
+            },
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "jax.lax.scan",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    2266.233010838429,
+                    5148.989614099264,
+                    10830.076256146034,
+                    22996.612669279177,
+                    46152.78557563821
+                ],
+                "line": {
+                    "color": "#c2683a",
+                    "dash": "solid",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#c2683a",
+                    "symbol": "circle",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 2.266 ms<br><b>compute</b>: 2.84 TF/s<br><b>logical BW</b>: 0.026 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 5.149 ms<br><b>compute</b>: 2.50 TF/s<br><b>logical BW</b>: 0.021 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 10.83 ms<br><b>compute</b>: 2.38 TF/s<br><b>logical BW</b>: 0.019 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 23.00 ms<br><b>compute</b>: 2.24 TF/s<br><b>logical BW</b>: 0.018 TB/s<br>one measured run (wall)<extra></extra>",
+                    "<b>jax.lax.scan</b> — one 4096-step serial while<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>wall</b>: 46.15 ms<br><b>compute</b>: 2.23 TF/s<br><b>logical BW</b>: 0.018 TB/s<br>one measured run (wall)<extra></extra>"
+                ]
+            },
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "name": "FLAT",
+                "x": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "y": [
+                    47.3,
+                    90.4,
+                    166.9,
+                    320.8,
+                    628
+                ],
+                "line": {
+                    "color": "#2f6f4f",
+                    "dash": "solid",
+                    "width": 2.4
+                },
+                "marker": {
+                    "size": 8.5,
+                    "color": "#2f6f4f",
+                    "symbol": "square",
+                    "line": {
+                        "color": "#f7f4ec",
+                        "width": 1.2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 256  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 47.3 µs<br><b>payload BW</b>: 1.075 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 512  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 90.4 µs<br><b>payload BW</b>: 1.125 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 1024  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 166.9 µs<br><b>payload BW</b>: 1.219 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 2048  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 320.8 µs<br><b>payload BW</b>: 1.268 TB/s",
+                    "<b>FLAT</b> — shipped chunked mosaic cell<br><b>S</b>: 4096  <b>N</b>: 16  <b>K=V</b>: 128  <b>B</b>: 8<br><b>event time</b>: 628.0 µs<br><b>payload BW</b>: 1.296 TB/s"
+                ]
+            }
+        ],
+        "layout": {
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "xaxis": {
+                "type": "log",
+                "title": "sequence length S (log scale)",
+                "tickvals": [
+                    256,
+                    512,
+                    1024,
+                    2048,
+                    4096
+                ],
+                "ticktext": [
+                    "256",
+                    "512",
+                    "1024",
+                    "2048",
+                    "4096"
+                ]
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "wall / call (log scale)"
+            },
+            "margin": {
+                "b": 64,
+                "l": 64,
+                "t": 44
+            }
+        }
+    },
+    "lasp": {
+        "height": 340,
+        "traces": [
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "jnp.copy",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    1.4602,
+                    null,
+                    null,
+                    null
+                ],
+                "marker": {
+                    "color": "#b98a2e"
+                },
+                "text": [
+                    "1.46",
+                    "",
+                    "",
+                    ""
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": "<b>jnp.copy</b><br><b>bandwidth</b>: 1.4602 TB/s<br><b>wallclock</b>: 224.8 µs<extra></extra>",
+                "offsetgroup": "roof",
+                "width": 0.17,
+                "offset": -0.085
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "naive",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.03157707553029305,
+                    0.016698701369755944,
+                    0.024829998273352902
+                ],
+                "marker": {
+                    "color": "#a33e2d",
+                    "symbol": "diamond"
+                },
+                "text": [
+                    "",
+                    "0.032",
+                    "0.017",
+                    "0.025"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>naive</b><br><b>bandwidth</b>: 0.0316 TB/s<br><b>wallclock</b>: 10.63 ms<br><b>speedup vs naive</b>: 1.00×<extra></extra>",
+                    "<b>naive</b><br><b>bandwidth</b>: 0.0167 TB/s<br><b>wallclock</b>: 20.47 ms<br><b>speedup vs naive</b>: 1.00×<extra></extra>",
+                    "<b>naive</b><br><b>bandwidth</b>: 0.0248 TB/s<br><b>wallclock</b>: 24.32 ms<br><b>speedup vs naive</b>: 1.00×<extra></extra>"
+                ],
+                "offsetgroup": "naive"
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "jax.lax.scan",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.31568757173769874,
+                    0.29219230361569365,
+                    0.200285109430959
+                ],
+                "marker": {
+                    "color": "#c2683a",
+                    "symbol": "circle"
+                },
+                "text": [
+                    "",
+                    "0.316",
+                    "0.292",
+                    "0.200"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>jax.lax.scan</b><br><b>bandwidth</b>: 0.3157 TB/s<br><b>wallclock</b>: 1062.9 µs<br><b>speedup vs naive</b>: 10.00×<extra></extra>",
+                    "<b>jax.lax.scan</b><br><b>bandwidth</b>: 0.2922 TB/s<br><b>wallclock</b>: 1169.9 µs<br><b>speedup vs naive</b>: 17.50×<extra></extra>",
+                    "<b>jax.lax.scan</b><br><b>bandwidth</b>: 0.2003 TB/s<br><b>wallclock</b>: 3015.6 µs<br><b>speedup vs naive</b>: 8.07×<extra></extra>"
+                ],
+                "offsetgroup": "scan"
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "chunked JAX",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.4004108830548926,
+                    0.22541099637322784,
+                    0.18785722870206215
+                ],
+                "marker": {
+                    "color": "#7d5ba6",
+                    "symbol": "square"
+                },
+                "text": [
+                    "",
+                    "0.40",
+                    "0.23",
+                    "0.19"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.4004 TB/s<br><b>wallclock</b>: 838.0 µs<br><b>speedup vs naive</b>: 12.68×<extra></extra>",
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.2254 TB/s<br><b>wallclock</b>: 1516.5 µs<br><b>speedup vs naive</b>: 13.50×<extra></extra>",
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.1879 TB/s<br><b>wallclock</b>: 3215.1 µs<br><b>speedup vs naive</b>: 7.57×<extra></extra>"
+                ],
+                "offsetgroup": "chunked"
+            },
+            {
+                "type": "bar",
+                "orientation": "v",
+                "name": "FLAT",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    1.4833966401414678,
+                    1.3142475048058437,
+                    1.5313888843813388
+                ],
+                "marker": {
+                    "color": "#2f6f4f",
+                    "symbol": "square"
+                },
+                "text": [
+                    "",
+                    "1.48",
+                    "1.31",
+                    "1.53"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 10,
+                    "color": "#161513"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.4834 TB/s<br><b>wallclock</b>: 226.2 µs<br><b>speedup vs naive</b>: 46.98×<br><b>speedup vs chunked JAX</b>: 3.70×<extra></extra>",
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.3142 TB/s<br><b>wallclock</b>: 260.1 µs<br><b>speedup vs naive</b>: 78.70×<br><b>speedup vs chunked JAX</b>: 5.83×<extra></extra>",
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.5314 TB/s<br><b>wallclock</b>: 394.4 µs<br><b>speedup vs naive</b>: 61.67×<br><b>speedup vs chunked JAX</b>: 8.15×<extra></extra>"
+                ],
+                "offsetgroup": "flat"
+            }
+        ],
+        "layout": {
+            "barmode": "group",
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "bandwidth (log TB/s)"
+            },
+            "margin": {
+                "b": 64,
+                "l": 64,
+                "t": 96
+            },
+            "bargap": 0.32
+        }
+    },
+    "labwdcore": {
+        "height": 340,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    1.4586,
+                    null,
+                    null,
+                    null
+                ],
+                "name": "jnp.copy",
+                "marker": {
+                    "color": "#b98a2e"
+                },
+                "text": [
+                    "1.46",
+                    "",
+                    "",
+                    ""
+                ],
+                "textposition": "outside",
+                "hovertemplate": "<b>jnp.copy</b><br><b>bandwidth</b>: 1.4586 TB/s<br><b>wallclock</b>: 184.0 µs<extra></extra>",
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.3,
+                    0.3,
+                    0.3
+                ],
+                "name": "naive",
+                "marker": {
+                    "color": "rgba(0,0,0,0)",
+                    "symbol": "diamond",
+                    "line": {
+                        "color": "#a33e2d",
+                        "width": 1.6
+                    }
+                },
+                "text": [
+                    "",
+                    "compilation<br>> 45 min",
+                    "compilation<br>> 45 min",
+                    "compilation<br>> 45 min"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 9,
+                    "color": "#a33e2d"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>naive</b><br>compilation > 45 min — too long to benchmark at this shape<extra></extra>",
+                    "<b>naive</b><br>compilation > 45 min — too long to benchmark at this shape<extra></extra>",
+                    "<b>naive</b><br>compilation > 45 min — too long to benchmark at this shape<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.3,
+                    0.3,
+                    0.3
+                ],
+                "name": "jax.lax.scan",
+                "marker": {
+                    "color": "rgba(0,0,0,0)",
+                    "symbol": "circle",
+                    "line": {
+                        "color": "#c2683a",
+                        "width": 1.6
+                    }
+                },
+                "text": [
+                    "",
+                    "OOM",
+                    "OOM",
+                    "OOM"
+                ],
+                "textposition": "outside",
+                "textfont": {
+                    "size": 9,
+                    "color": "#c2683a"
+                },
+                "hovertemplate": [
+                    null,
+                    "<b>jax.lax.scan</b><br>OOM — exceeds HBM at this shape<extra></extra>",
+                    "<b>jax.lax.scan</b><br>OOM — exceeds HBM at this shape<extra></extra>",
+                    "<b>jax.lax.scan</b><br>OOM — exceeds HBM at this shape<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    0.1911564375976949,
+                    0.12360874076769147,
+                    0.11961380278600416
+                ],
+                "name": "chunked JAX",
+                "marker": {
+                    "color": "#7d5ba6",
+                    "symbol": "square"
+                },
+                "text": [
+                    "",
+                    "0.19",
+                    "0.12",
+                    "0.12"
+                ],
+                "textposition": "outside",
+                "hovertemplate": [
+                    null,
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.1912 TB/s<br><b>wallclock</b>: 5309.9 µs<extra></extra>",
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.1236 TB/s<br><b>wallclock</b>: 8245.5 µs<extra></extra>",
+                    "<b>chunked JAX</b><br><b>bandwidth</b>: 0.1196 TB/s<br><b>wallclock</b>: 11.85 ms<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "jnp.copy",
+                    "Linear\nAttention",
+                    "Mamba-2",
+                    "Gated Linear Attention"
+                ],
+                "y": [
+                    null,
+                    1.4174299231950844,
+                    0.9954252094931146,
+                    1.3661701378047604
+                ],
+                "name": "FLAT",
+                "marker": {
+                    "color": "#2f6f4f",
+                    "symbol": "square"
+                },
+                "text": [
+                    "",
+                    "1.42",
+                    "1.00",
+                    "1.37"
+                ],
+                "textposition": "outside",
+                "hovertemplate": [
+                    null,
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.4174 TB/s<br><b>wallclock</b>: 716.1 µs<br><b>speedup vs chunked JAX</b>: 7.42×<extra></extra>",
+                    "<b>FLAT</b><br><b>bandwidth</b>: 0.9954 TB/s<br><b>wallclock</b>: 1023.9 µs<br><b>speedup vs chunked JAX</b>: 8.05×<extra></extra>",
+                    "<b>FLAT</b><br><b>bandwidth</b>: 1.3662 TB/s<br><b>wallclock</b>: 1037.7 µs<br><b>speedup vs chunked JAX</b>: 11.42×<extra></extra>"
+                ],
+                "showlegend": true
+            }
+        ],
+        "layout": {
+            "barmode": "group",
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "yaxis": {
+                "type": "log",
+                "title": "bandwidth (log TB/s)",
+                "range": [
+                    -1.1,
+                    0.3
+                ]
+            },
+            "margin": {
+                "b": 64,
+                "l": 64,
+                "t": 96
+            },
+            "bargap": 0.32
+        }
+    },
+    "lalayer": {
+        "height": 440,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    "Linear Attention<br>before",
+                    "Linear Attention<br>after",
+                    "Mamba-2<br>before",
+                    "Mamba-2<br>after",
+                    "Gated Linear Attention<br>before",
+                    "Gated Linear Attention<br>after"
+                ],
+                "y": [
+                    4225.7,
+                    4290.7,
+                    4432.2,
+                    4488.8,
+                    6273.3,
+                    6023.3
+                ],
+                "name": "matmuls & other XLA ops",
+                "marker": {
+                    "color": "#1baf7a",
+                    "line": {
+                        "color": "#ffffff",
+                        "width": 2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>matmuls & other XLA ops</b><br>Linear Attention · before<br><b>device time</b>: 4,226 µs<br><b>share of step</b>: 48.9%<extra></extra>",
+                    "<b>matmuls & other XLA ops</b><br>Linear Attention · after<br><b>device time</b>: 4,291 µs<br><b>share of step</b>: 76.5%<extra></extra>",
+                    "<b>matmuls & other XLA ops</b><br>Mamba-2 · before<br><b>device time</b>: 4,432 µs<br><b>share of step</b>: 48.1%<extra></extra>",
+                    "<b>matmuls & other XLA ops</b><br>Mamba-2 · after<br><b>device time</b>: 4,489 µs<br><b>share of step</b>: 74.6%<extra></extra>",
+                    "<b>matmuls & other XLA ops</b><br>Gated Linear Attention · before<br><b>device time</b>: 6,273 µs<br><b>share of step</b>: 51.9%<extra></extra>",
+                    "<b>matmuls & other XLA ops</b><br>Gated Linear Attention · after<br><b>device time</b>: 6,023 µs<br><b>share of step</b>: 77.4%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "Linear Attention<br>before",
+                    "Linear Attention<br>after",
+                    "Mamba-2<br>before",
+                    "Mamba-2<br>after",
+                    "Gated Linear Attention<br>before",
+                    "Gated Linear Attention<br>after"
+                ],
+                "y": [
+                    1525.2,
+                    1295.2,
+                    1867.1,
+                    1492.0,
+                    2310.4,
+                    1726.0
+                ],
+                "name": "linear-attention kernels",
+                "marker": {
+                    "color": "#2a78d6",
+                    "line": {
+                        "color": "#ffffff",
+                        "width": 2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>linear-attention kernels</b><br>Linear Attention · before<br><b>device time</b>: 1,525 µs<br><b>share of step</b>: 17.7%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Linear Attention · after<br><b>device time</b>: 1,295 µs<br><b>share of step</b>: 23.1%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Mamba-2 · before<br><b>device time</b>: 1,867 µs<br><b>share of step</b>: 20.3%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Mamba-2 · after<br><b>device time</b>: 1,492 µs<br><b>share of step</b>: 24.8%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Gated Linear Attention · before<br><b>device time</b>: 2,310 µs<br><b>share of step</b>: 19.1%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Gated Linear Attention · after<br><b>device time</b>: 1,726 µs<br><b>share of step</b>: 22.2%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "Linear Attention<br>before",
+                    "Linear Attention<br>after",
+                    "Mamba-2<br>before",
+                    "Mamba-2<br>after",
+                    "Gated Linear Attention<br>before",
+                    "Gated Linear Attention<br>after"
+                ],
+                "y": [
+                    1782.9,
+                    25.7,
+                    1813.9,
+                    38.8,
+                    2407.9,
+                    35.3
+                ],
+                "name": "layout copies around the kernels",
+                "marker": {
+                    "color": "#eb6834",
+                    "line": {
+                        "color": "#ffffff",
+                        "width": 2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>layout copies around the kernels</b><br>Linear Attention · before<br><b>device time</b>: 1,783 µs<br><b>share of step</b>: 20.6%<extra></extra>",
+                    "<b>layout copies around the kernels</b><br>Linear Attention · after<br><b>device time</b>: 26 µs<br><b>share of step</b>: 0.5%<extra></extra>",
+                    "<b>layout copies around the kernels</b><br>Mamba-2 · before<br><b>device time</b>: 1,814 µs<br><b>share of step</b>: 19.7%<extra></extra>",
+                    "<b>layout copies around the kernels</b><br>Mamba-2 · after<br><b>device time</b>: 39 µs<br><b>share of step</b>: 0.6%<extra></extra>",
+                    "<b>layout copies around the kernels</b><br>Gated Linear Attention · before<br><b>device time</b>: 2,408 µs<br><b>share of step</b>: 19.9%<extra></extra>",
+                    "<b>layout copies around the kernels</b><br>Gated Linear Attention · after<br><b>device time</b>: 35 µs<br><b>share of step</b>: 0.5%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "Linear Attention<br>before",
+                    "Linear Attention<br>after",
+                    "Mamba-2<br>before",
+                    "Mamba-2<br>after",
+                    "Gated Linear Attention<br>before",
+                    "Gated Linear Attention<br>after"
+                ],
+                "y": [
+                    1104.1,
+                    0,
+                    1104.4,
+                    0,
+                    1103.4,
+                    0
+                ],
+                "name": "q / k / v split + gradient concat",
+                "marker": {
+                    "color": "#4a3aa7",
+                    "line": {
+                        "color": "#ffffff",
+                        "width": 2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>q / k / v split + gradient concat</b><br>Linear Attention · before<br><b>device time</b>: 1,104 µs<br><b>share of step</b>: 12.8%<extra></extra>",
+                    "<b>q / k / v split + gradient concat</b><br>Linear Attention · after<br><b>device time</b>: 0 µs<br><b>share of step</b>: 0.0%<extra></extra>",
+                    "<b>q / k / v split + gradient concat</b><br>Mamba-2 · before<br><b>device time</b>: 1,104 µs<br><b>share of step</b>: 12.0%<extra></extra>",
+                    "<b>q / k / v split + gradient concat</b><br>Mamba-2 · after<br><b>device time</b>: 0 µs<br><b>share of step</b>: 0.0%<extra></extra>",
+                    "<b>q / k / v split + gradient concat</b><br>Gated Linear Attention · before<br><b>device time</b>: 1,103 µs<br><b>share of step</b>: 9.1%<extra></extra>",
+                    "<b>q / k / v split + gradient concat</b><br>Gated Linear Attention · after<br><b>device time</b>: 0 µs<br><b>share of step</b>: 0.0%<extra></extra>"
+                ],
+                "showlegend": true
+            }
+        ],
+        "layout": {
+            "barmode": "stack",
+            "bargap": 0.35,
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "yaxis": {
+                "title": "device time / training step (µs)",
+                "range": [
+                    0,
+                    13500
+                ]
+            },
+            "margin": {
+                "b": 72,
+                "l": 72,
+                "t": 96
+            },
+            "annotations": [
+                {
+                    "x": "Linear Attention<br>before",
+                    "y": 8637.7282188,
+                    "text": "8,638 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Linear Attention<br>after",
+                    "y": 5611.653516,
+                    "text": "5,612 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Mamba-2<br>before",
+                    "y": 9217.5943432,
+                    "text": "9,218 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Mamba-2<br>after",
+                    "y": 6019.5409064,
+                    "text": "6,020 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Gated Linear Attention<br>before",
+                    "y": 12095.0274528,
+                    "text": "12,095 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Gated Linear Attention<br>after",
+                    "y": 7784.5002656,
+                    "text": "7,785 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                }
+            ]
+        }
+    },
+    "lalayerconv": {
+        "height": 460,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    "Linear Attention<br>XLA",
+                    "Linear Attention<br>Pallas",
+                    "Mamba-2<br>XLA",
+                    "Mamba-2<br>Pallas",
+                    "Gated Linear Attention<br>XLA",
+                    "Gated Linear Attention<br>Pallas"
+                ],
+                "y": [
+                    9656.7,
+                    4301.3,
+                    10002.0,
+                    4646.1,
+                    11119.3,
+                    5914.5
+                ],
+                "name": "matmuls, XLA conv & other XLA ops",
+                "marker": {
+                    "color": "#1baf7a",
+                    "line": {
+                        "color": "#ffffff",
+                        "width": 2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>matmuls, XLA conv & other XLA ops</b><br>Linear Attention · XLA<br><b>device time</b>: 9,657 µs<br><b>share of step</b>: 88.2%<extra></extra>",
+                    "<b>matmuls, XLA conv & other XLA ops</b><br>Linear Attention · Pallas<br><b>device time</b>: 4,301 µs<br><b>share of step</b>: 56.0%<extra></extra>",
+                    "<b>matmuls, XLA conv & other XLA ops</b><br>Mamba-2 · XLA<br><b>device time</b>: 10,002 µs<br><b>share of step</b>: 85.1%<extra></extra>",
+                    "<b>matmuls, XLA conv & other XLA ops</b><br>Mamba-2 · Pallas<br><b>device time</b>: 4,646 µs<br><b>share of step</b>: 54.7%<extra></extra>",
+                    "<b>matmuls, XLA conv & other XLA ops</b><br>Gated Linear Attention · XLA<br><b>device time</b>: 11,119 µs<br><b>share of step</b>: 84.9%<extra></extra>",
+                    "<b>matmuls, XLA conv & other XLA ops</b><br>Gated Linear Attention · Pallas<br><b>device time</b>: 5,914 µs<br><b>share of step</b>: 59.3%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "Linear Attention<br>XLA",
+                    "Linear Attention<br>Pallas",
+                    "Mamba-2<br>XLA",
+                    "Mamba-2<br>Pallas",
+                    "Gated Linear Attention<br>XLA",
+                    "Gated Linear Attention<br>Pallas"
+                ],
+                "y": [
+                    1292.0,
+                    1292.9,
+                    1752.4,
+                    1757.2,
+                    1970.5,
+                    1986.2
+                ],
+                "name": "linear-attention kernels",
+                "marker": {
+                    "color": "#2a78d6",
+                    "line": {
+                        "color": "#ffffff",
+                        "width": 2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>linear-attention kernels</b><br>Linear Attention · XLA<br><b>device time</b>: 1,292 µs<br><b>share of step</b>: 11.8%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Linear Attention · Pallas<br><b>device time</b>: 1,293 µs<br><b>share of step</b>: 16.8%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Mamba-2 · XLA<br><b>device time</b>: 1,752 µs<br><b>share of step</b>: 14.9%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Mamba-2 · Pallas<br><b>device time</b>: 1,757 µs<br><b>share of step</b>: 20.7%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Gated Linear Attention · XLA<br><b>device time</b>: 1,970 µs<br><b>share of step</b>: 15.1%<extra></extra>",
+                    "<b>linear-attention kernels</b><br>Gated Linear Attention · Pallas<br><b>device time</b>: 1,986 µs<br><b>share of step</b>: 19.9%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    "Linear Attention<br>XLA",
+                    "Linear Attention<br>Pallas",
+                    "Mamba-2<br>XLA",
+                    "Mamba-2<br>Pallas",
+                    "Gated Linear Attention<br>XLA",
+                    "Gated Linear Attention<br>Pallas"
+                ],
+                "y": [
+                    0.0,
+                    2080.3,
+                    0.0,
+                    2093.9,
+                    0.0,
+                    2080.0
+                ],
+                "name": "conv kernels (Pallas)",
+                "marker": {
+                    "color": "#eb6834",
+                    "line": {
+                        "color": "#ffffff",
+                        "width": 2
+                    }
+                },
+                "hovertemplate": [
+                    "<b>conv kernels (Pallas)</b><br>Linear Attention · XLA<br><b>device time</b>: 0 µs<br><b>share of step</b>: 0.0%<extra></extra>",
+                    "<b>conv kernels (Pallas)</b><br>Linear Attention · Pallas<br><b>device time</b>: 2,080 µs<br><b>share of step</b>: 27.1%<extra></extra>",
+                    "<b>conv kernels (Pallas)</b><br>Mamba-2 · XLA<br><b>device time</b>: 0 µs<br><b>share of step</b>: 0.0%<extra></extra>",
+                    "<b>conv kernels (Pallas)</b><br>Mamba-2 · Pallas<br><b>device time</b>: 2,094 µs<br><b>share of step</b>: 24.6%<extra></extra>",
+                    "<b>conv kernels (Pallas)</b><br>Gated Linear Attention · XLA<br><b>device time</b>: 0 µs<br><b>share of step</b>: 0.0%<extra></extra>",
+                    "<b>conv kernels (Pallas)</b><br>Gated Linear Attention · Pallas<br><b>device time</b>: 2,080 µs<br><b>share of step</b>: 20.8%<extra></extra>"
+                ],
+                "showlegend": true
+            }
+        ],
+        "layout": {
+            "barmode": "stack",
+            "bargap": 0.3,
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0
+            },
+            "yaxis": {
+                "title": "device time / training step (µs)",
+                "range": [
+                    0,
+                    14500
+                ]
+            },
+            "xaxis": {
+                "tickfont": {
+                    "size": 10
+                }
+            },
+            "margin": {
+                "b": 88,
+                "l": 72,
+                "t": 96
+            },
+            "annotations": [
+                {
+                    "x": "Linear Attention<br>XLA",
+                    "y": 10948.7371412,
+                    "text": "10,949 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Linear Attention<br>Pallas",
+                    "y": 7674.5439528,
+                    "text": "7,675 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Mamba-2<br>XLA",
+                    "y": 11754.4652504,
+                    "text": "11,754 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Mamba-2<br>Pallas",
+                    "y": 8497.2183436,
+                    "text": "8,497 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Gated Linear Attention<br>XLA",
+                    "y": 13089.8184848,
+                    "text": "13,090 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                },
+                {
+                    "x": "Gated Linear Attention<br>Pallas",
+                    "y": 9980.7367028,
+                    "text": "9,981 µs",
+                    "showarrow": false,
+                    "yshift": 12,
+                    "font": {
+                        "size": 11,
+                        "color": "#3d3a33"
+                    }
+                }
+            ]
+        }
+    },
+    "lalayerops": {
+        "height": 520,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    1406.9,
+                    1406.1,
+                    975.9,
+                    1406.4,
+                    1405.9,
+                    976.8,
+                    1406.7,
+                    1406.0,
+                    976.4,
+                    976.6
+                ],
+                "name": "input projection",
+                "legendgroup": "input projection",
+                "marker": {
+                    "color": "#1baf7a",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>input projection, forward</b><br>Linear Attention · no kernels<br><b>device time</b>: 1,407 µs<br><b>share of step</b>: 6.5%<extra></extra>",
+                    "<b>input projection, forward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 1,406 µs<br><b>share of step</b>: 10.3%<extra></extra>",
+                    "<b>input projection, forward</b><br>Linear Attention · all kernels<br><b>device time</b>: 976 µs<br><b>share of step</b>: 9.6%<extra></extra>",
+                    "<b>input projection, forward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 1,406 µs<br><b>share of step</b>: 5.9%<extra></extra>",
+                    "<b>input projection, forward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 1,406 µs<br><b>share of step</b>: 9.8%<extra></extra>",
+                    "<b>input projection, forward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 977 µs<br><b>share of step</b>: 8.9%<extra></extra>",
+                    "<b>input projection, forward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 1,407 µs<br><b>share of step</b>: 4.1%<extra></extra>",
+                    "<b>input projection, forward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 1,406 µs<br><b>share of step</b>: 8.7%<extra></extra>",
+                    "<b>input projection, forward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 976 µs<br><b>share of step</b>: 7.8%<extra></extra>",
+                    "<b>input projection, forward</b><br>Splash Attention<br><b>device time</b>: 977 µs<br><b>share of step</b>: 6.1%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    2619.3,
+                    2620.9,
+                    2187.1,
+                    2618.5,
+                    2619.9,
+                    2186.0,
+                    2618.7,
+                    2648.8,
+                    2187.7,
+                    1197.4
+                ],
+                "name": "input projection",
+                "legendgroup": "input projection",
+                "marker": {
+                    "color": "#1baf7a",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>input projection, backward</b><br>Linear Attention · no kernels<br><b>device time</b>: 2,619 µs<br><b>share of step</b>: 12.1%<extra></extra>",
+                    "<b>input projection, backward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 2,621 µs<br><b>share of step</b>: 19.2%<extra></extra>",
+                    "<b>input projection, backward</b><br>Linear Attention · all kernels<br><b>device time</b>: 2,187 µs<br><b>share of step</b>: 21.4%<extra></extra>",
+                    "<b>input projection, backward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 2,618 µs<br><b>share of step</b>: 11.0%<extra></extra>",
+                    "<b>input projection, backward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 2,620 µs<br><b>share of step</b>: 18.2%<extra></extra>",
+                    "<b>input projection, backward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 2,186 µs<br><b>share of step</b>: 20.0%<extra></extra>",
+                    "<b>input projection, backward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 2,619 µs<br><b>share of step</b>: 7.6%<extra></extra>",
+                    "<b>input projection, backward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 2,649 µs<br><b>share of step</b>: 16.5%<extra></extra>",
+                    "<b>input projection, backward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 2,188 µs<br><b>share of step</b>: 17.5%<extra></extra>",
+                    "<b>input projection, backward</b><br>Splash Attention<br><b>device time</b>: 1,197 µs<br><b>share of step</b>: 7.5%<extra></extra>"
+                ],
+                "showlegend": false
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    null,
+                    null,
+                    null,
+                    92.8,
+                    96.4,
+                    96.4,
+                    474.1,
+                    474.1,
+                    473.7,
+                    null
+                ],
+                "name": "forget gate",
+                "legendgroup": "forget gate",
+                "marker": {
+                    "color": "#eda100",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "",
+                    "",
+                    "<b>forget gate, forward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 93 µs<br><b>share of step</b>: 0.4%<extra></extra>",
+                    "<b>forget gate, forward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 96 µs<br><b>share of step</b>: 0.7%<extra></extra>",
+                    "<b>forget gate, forward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 96 µs<br><b>share of step</b>: 0.9%<extra></extra>",
+                    "<b>forget gate, forward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 474 µs<br><b>share of step</b>: 1.4%<extra></extra>",
+                    "<b>forget gate, forward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 474 µs<br><b>share of step</b>: 2.9%<extra></extra>",
+                    "<b>forget gate, forward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 474 µs<br><b>share of step</b>: 3.8%<extra></extra>",
+                    ""
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    null,
+                    null,
+                    null,
+                    195.5,
+                    188.1,
+                    177.1,
+                    3387.1,
+                    1241.7,
+                    1198.2,
+                    null
+                ],
+                "name": "forget gate",
+                "legendgroup": "forget gate",
+                "marker": {
+                    "color": "#eda100",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "",
+                    "",
+                    "<b>forget gate, backward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 196 µs<br><b>share of step</b>: 0.8%<extra></extra>",
+                    "<b>forget gate, backward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 188 µs<br><b>share of step</b>: 1.3%<extra></extra>",
+                    "<b>forget gate, backward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 177 µs<br><b>share of step</b>: 1.6%<extra></extra>",
+                    "<b>forget gate, backward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 3,387 µs<br><b>share of step</b>: 9.8%<extra></extra>",
+                    "<b>forget gate, backward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 1,242 µs<br><b>share of step</b>: 7.7%<extra></extra>",
+                    "<b>forget gate, backward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 1,198 µs<br><b>share of step</b>: 9.6%<extra></extra>",
+                    ""
+                ],
+                "showlegend": false
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    836.5,
+                    1116.6,
+                    731.2,
+                    838.4,
+                    1118.0,
+                    733.0,
+                    835.8,
+                    1120.8,
+                    731.8,
+                    null
+                ],
+                "name": "conv",
+                "legendgroup": "conv",
+                "marker": {
+                    "color": "#eb6834",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>conv, forward</b><br>Linear Attention · no kernels<br><b>device time</b>: 836 µs<br><b>share of step</b>: 3.9%<extra></extra>",
+                    "<b>conv, forward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 1,117 µs<br><b>share of step</b>: 8.2%<extra></extra>",
+                    "<b>conv, forward</b><br>Linear Attention · all kernels<br><b>device time</b>: 731 µs<br><b>share of step</b>: 7.2%<extra></extra>",
+                    "<b>conv, forward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 838 µs<br><b>share of step</b>: 3.5%<extra></extra>",
+                    "<b>conv, forward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 1,118 µs<br><b>share of step</b>: 7.8%<extra></extra>",
+                    "<b>conv, forward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 733 µs<br><b>share of step</b>: 6.7%<extra></extra>",
+                    "<b>conv, forward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 836 µs<br><b>share of step</b>: 2.4%<extra></extra>",
+                    "<b>conv, forward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 1,121 µs<br><b>share of step</b>: 7.0%<extra></extra>",
+                    "<b>conv, forward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 732 µs<br><b>share of step</b>: 5.8%<extra></extra>",
+                    ""
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    1919.2,
+                    3187.7,
+                    1350.3,
+                    1978.5,
+                    3189.4,
+                    1350.8,
+                    1934.6,
+                    3188.4,
+                    1348.3,
+                    null
+                ],
+                "name": "conv",
+                "legendgroup": "conv",
+                "marker": {
+                    "color": "#eb6834",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>conv, backward</b><br>Linear Attention · no kernels<br><b>device time</b>: 1,919 µs<br><b>share of step</b>: 8.9%<extra></extra>",
+                    "<b>conv, backward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 3,188 µs<br><b>share of step</b>: 23.3%<extra></extra>",
+                    "<b>conv, backward</b><br>Linear Attention · all kernels<br><b>device time</b>: 1,350 µs<br><b>share of step</b>: 13.2%<extra></extra>",
+                    "<b>conv, backward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 1,978 µs<br><b>share of step</b>: 8.3%<extra></extra>",
+                    "<b>conv, backward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 3,189 µs<br><b>share of step</b>: 22.2%<extra></extra>",
+                    "<b>conv, backward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 1,351 µs<br><b>share of step</b>: 12.4%<extra></extra>",
+                    "<b>conv, backward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 1,935 µs<br><b>share of step</b>: 5.6%<extra></extra>",
+                    "<b>conv, backward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 3,188 µs<br><b>share of step</b>: 19.8%<extra></extra>",
+                    "<b>conv, backward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 1,348 µs<br><b>share of step</b>: 10.8%<extra></extra>",
+                    ""
+                ],
+                "showlegend": false
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    3641.2,
+                    377.4,
+                    377.4,
+                    3945.4,
+                    431.6,
+                    431.6,
+                    5074.4,
+                    542.2,
+                    539.6,
+                    5616.3
+                ],
+                "name": "attention",
+                "legendgroup": "linear attention",
+                "marker": {
+                    "color": "#2a78d6",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>attention, forward</b><br>Linear Attention · no kernels<br><b>device time</b>: 3,641 µs<br><b>share of step</b>: 16.8%<extra></extra>",
+                    "<b>attention, forward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 377 µs<br><b>share of step</b>: 2.8%<extra></extra>",
+                    "<b>attention, forward</b><br>Linear Attention · all kernels<br><b>device time</b>: 377 µs<br><b>share of step</b>: 3.7%<extra></extra>",
+                    "<b>attention, forward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 3,945 µs<br><b>share of step</b>: 16.5%<extra></extra>",
+                    "<b>attention, forward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 432 µs<br><b>share of step</b>: 3.0%<extra></extra>",
+                    "<b>attention, forward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 432 µs<br><b>share of step</b>: 3.9%<extra></extra>",
+                    "<b>attention, forward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 5,074 µs<br><b>share of step</b>: 14.7%<extra></extra>",
+                    "<b>attention, forward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 542 µs<br><b>share of step</b>: 3.4%<extra></extra>",
+                    "<b>attention, forward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 540 µs<br><b>share of step</b>: 4.3%<extra></extra>",
+                    "<b>attention, forward</b><br>Splash Attention<br><b>device time</b>: 5,616 µs<br><b>share of step</b>: 35.3%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    5886.2,
+                    911.8,
+                    911.2,
+                    6988.2,
+                    1278.3,
+                    1275.1,
+                    9693.6,
+                    1429.0,
+                    1438.3,
+                    6986.8
+                ],
+                "name": "attention",
+                "legendgroup": "linear attention",
+                "marker": {
+                    "color": "#2a78d6",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>attention, backward</b><br>Linear Attention · no kernels<br><b>device time</b>: 5,886 µs<br><b>share of step</b>: 27.2%<extra></extra>",
+                    "<b>attention, backward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 912 µs<br><b>share of step</b>: 6.7%<extra></extra>",
+                    "<b>attention, backward</b><br>Linear Attention · all kernels<br><b>device time</b>: 911 µs<br><b>share of step</b>: 8.9%<extra></extra>",
+                    "<b>attention, backward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 6,988 µs<br><b>share of step</b>: 29.3%<extra></extra>",
+                    "<b>attention, backward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 1,278 µs<br><b>share of step</b>: 8.9%<extra></extra>",
+                    "<b>attention, backward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 1,275 µs<br><b>share of step</b>: 11.7%<extra></extra>",
+                    "<b>attention, backward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 9,694 µs<br><b>share of step</b>: 28.1%<extra></extra>",
+                    "<b>attention, backward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 1,429 µs<br><b>share of step</b>: 8.9%<extra></extra>",
+                    "<b>attention, backward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 1,438 µs<br><b>share of step</b>: 11.5%<extra></extra>",
+                    "<b>attention, backward</b><br>Splash Attention<br><b>device time</b>: 6,987 µs<br><b>share of step</b>: 43.9%<extra></extra>"
+                ],
+                "showlegend": false
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    1619.9,
+                    814.3,
+                    814.7,
+                    1623.9,
+                    799.5,
+                    799.7,
+                    1682.0,
+                    812.4,
+                    816.9,
+                    null
+                ],
+                "name": "output gate & norm",
+                "legendgroup": "output gate & norm",
+                "marker": {
+                    "color": "#e34948",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>output gate & norm, forward</b><br>Linear Attention · no kernels<br><b>device time</b>: 1,620 µs<br><b>share of step</b>: 7.5%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 814 µs<br><b>share of step</b>: 6.0%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Linear Attention · all kernels<br><b>device time</b>: 815 µs<br><b>share of step</b>: 8.0%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 1,624 µs<br><b>share of step</b>: 6.8%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 800 µs<br><b>share of step</b>: 5.6%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 800 µs<br><b>share of step</b>: 7.3%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 1,682 µs<br><b>share of step</b>: 4.9%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 812 µs<br><b>share of step</b>: 5.0%<extra></extra>",
+                    "<b>output gate & norm, forward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 817 µs<br><b>share of step</b>: 6.5%<extra></extra>",
+                    ""
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    1810.3,
+                    1660.1,
+                    1464.4,
+                    1848.8,
+                    1669.1,
+                    1510.9,
+                    2833.9,
+                    1654.7,
+                    1434.8,
+                    null
+                ],
+                "name": "output gate & norm",
+                "legendgroup": "output gate & norm",
+                "marker": {
+                    "color": "#e34948",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>output gate & norm, backward</b><br>Linear Attention · no kernels<br><b>device time</b>: 1,810 µs<br><b>share of step</b>: 8.4%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 1,660 µs<br><b>share of step</b>: 12.1%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Linear Attention · all kernels<br><b>device time</b>: 1,464 µs<br><b>share of step</b>: 14.4%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 1,849 µs<br><b>share of step</b>: 7.7%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 1,669 µs<br><b>share of step</b>: 11.6%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 1,511 µs<br><b>share of step</b>: 13.8%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 2,834 µs<br><b>share of step</b>: 8.2%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 1,655 µs<br><b>share of step</b>: 10.3%<extra></extra>",
+                    "<b>output gate & norm, backward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 1,435 µs<br><b>share of step</b>: 11.5%<extra></extra>",
+                    ""
+                ],
+                "showlegend": false
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    331.4,
+                    332.9,
+                    333.2,
+                    331.8,
+                    332.8,
+                    333.0,
+                    332.1,
+                    332.9,
+                    332.4,
+                    378.1
+                ],
+                "name": "output projection",
+                "legendgroup": "output projection",
+                "marker": {
+                    "color": "#4a3aa7",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>output projection, forward</b><br>Linear Attention · no kernels<br><b>device time</b>: 331 µs<br><b>share of step</b>: 1.5%<extra></extra>",
+                    "<b>output projection, forward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 333 µs<br><b>share of step</b>: 2.4%<extra></extra>",
+                    "<b>output projection, forward</b><br>Linear Attention · all kernels<br><b>device time</b>: 333 µs<br><b>share of step</b>: 3.3%<extra></extra>",
+                    "<b>output projection, forward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 332 µs<br><b>share of step</b>: 1.4%<extra></extra>",
+                    "<b>output projection, forward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 333 µs<br><b>share of step</b>: 2.3%<extra></extra>",
+                    "<b>output projection, forward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 333 µs<br><b>share of step</b>: 3.0%<extra></extra>",
+                    "<b>output projection, forward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 332 µs<br><b>share of step</b>: 1.0%<extra></extra>",
+                    "<b>output projection, forward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 333 µs<br><b>share of step</b>: 2.1%<extra></extra>",
+                    "<b>output projection, forward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 332 µs<br><b>share of step</b>: 2.7%<extra></extra>",
+                    "<b>output projection, forward</b><br>Splash Attention<br><b>device time</b>: 378 µs<br><b>share of step</b>: 2.4%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    1072.3,
+                    998.1,
+                    1000.5,
+                    1071.8,
+                    995.6,
+                    997.5,
+                    1335.7,
+                    994.2,
+                    994.3,
+                    729.3
+                ],
+                "name": "output projection",
+                "legendgroup": "output projection",
+                "marker": {
+                    "color": "#4a3aa7",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>output projection, backward</b><br>Linear Attention · no kernels<br><b>device time</b>: 1,072 µs<br><b>share of step</b>: 5.0%<extra></extra>",
+                    "<b>output projection, backward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 998 µs<br><b>share of step</b>: 7.3%<extra></extra>",
+                    "<b>output projection, backward</b><br>Linear Attention · all kernels<br><b>device time</b>: 1,000 µs<br><b>share of step</b>: 9.8%<extra></extra>",
+                    "<b>output projection, backward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 1,072 µs<br><b>share of step</b>: 4.5%<extra></extra>",
+                    "<b>output projection, backward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 996 µs<br><b>share of step</b>: 6.9%<extra></extra>",
+                    "<b>output projection, backward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 998 µs<br><b>share of step</b>: 9.1%<extra></extra>",
+                    "<b>output projection, backward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 1,336 µs<br><b>share of step</b>: 3.9%<extra></extra>",
+                    "<b>output projection, backward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 994 µs<br><b>share of step</b>: 6.2%<extra></extra>",
+                    "<b>output projection, backward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 994 µs<br><b>share of step</b>: 7.9%<extra></extra>",
+                    "<b>output projection, backward</b><br>Splash Attention<br><b>device time</b>: 729 µs<br><b>share of step</b>: 4.6%<extra></extra>"
+                ],
+                "showlegend": false
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    508.0,
+                    256.2,
+                    55.5,
+                    919.8,
+                    242.1,
+                    59.0,
+                    2827.0,
+                    246.8,
+                    47.4,
+                    25.9
+                ],
+                "name": "other ops",
+                "legendgroup": "other",
+                "marker": {
+                    "color": "#e87ba4",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>other ops, forward</b><br>Linear Attention · no kernels<br><b>device time</b>: 508 µs<br><b>share of step</b>: 2.3%<extra></extra>",
+                    "<b>other ops, forward</b><br>Linear Attention · LA kernels<br><b>device time</b>: 256 µs<br><b>share of step</b>: 1.9%<extra></extra>",
+                    "<b>other ops, forward</b><br>Linear Attention · all kernels<br><b>device time</b>: 56 µs<br><b>share of step</b>: 0.5%<extra></extra>",
+                    "<b>other ops, forward</b><br>Mamba-2 · no kernels<br><b>device time</b>: 920 µs<br><b>share of step</b>: 3.9%<extra></extra>",
+                    "<b>other ops, forward</b><br>Mamba-2 · LA kernels<br><b>device time</b>: 242 µs<br><b>share of step</b>: 1.7%<extra></extra>",
+                    "<b>other ops, forward</b><br>Mamba-2 · all kernels<br><b>device time</b>: 59 µs<br><b>share of step</b>: 0.5%<extra></extra>",
+                    "<b>other ops, forward</b><br>Gated Linear Attention · no kernels<br><b>device time</b>: 2,827 µs<br><b>share of step</b>: 8.2%<extra></extra>",
+                    "<b>other ops, forward</b><br>Gated Linear Attention · LA kernels<br><b>device time</b>: 247 µs<br><b>share of step</b>: 1.5%<extra></extra>",
+                    "<b>other ops, forward</b><br>Gated Linear Attention · all kernels<br><b>device time</b>: 47 µs<br><b>share of step</b>: 0.4%<extra></extra>",
+                    "<b>other ops, forward</b><br>Splash Attention<br><b>device time</b>: 26 µs<br><b>share of step</b>: 0.2%<extra></extra>"
+                ],
+                "showlegend": true
+            },
+            {
+                "type": "scatter",
+                "mode": "text",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Gated Linear Attention",
+                        "Attention"
+                    ],
+                    [
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "no kernels",
+                        "LA kernels",
+                        "all kernels",
+                        "Splash"
+                    ]
+                ],
+                "y": [
+                    21651.2621872,
+                    13682.1471092,
+                    10201.4108452,
+                    23859.790096,
+                    14366.865577199998,
+                    10926.909703199999,
+                    34435.5338908,
+                    16091.9142488,
+                    12519.8835628,
+                    15910.2941716
+                ],
+                "text": [
+                    "21,651 µs",
+                    "13,682 µs",
+                    "10,201 µs",
+                    "23,860 µs",
+                    "14,367 µs",
+                    "10,927 µs",
+                    "34,436 µs",
+                    "16,092 µs",
+                    "12,520 µs",
+                    "15,910 µs"
+                ],
+                "textposition": "top center",
+                "textfont": {
+                    "size": 10,
+                    "color": "#3d3a33"
+                },
+                "hoverinfo": "skip",
+                "showlegend": false
+            }
+        ],
+        "layout": {
+            "barmode": "stack",
+            "bargap": 0.3,
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0,
+                "font": {
+                    "size": 11
+                }
+            },
+            "yaxis": {
+                "title": "device time / training step (µs)",
+                "range": [
+                    0,
+                    37879.08727988
+                ]
+            },
+            "xaxis": {
+                "tickfont": {
+                    "size": 10
+                }
+            },
+            "margin": {
+                "b": 72,
+                "l": 72,
+                "t": 72
+            }
+        }
+    },
+    "lah100": {
+        "height": 520,
+        "traces": [
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    null,
+                    null,
+                    8.8,
+                    null,
+                    177.1,
+                    null
+                ],
+                "name": "gate cumsum",
+                "legendgroup": "gate cumsum",
+                "showlegend": true,
+                "marker": {
+                    "color": "#eda100",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "",
+                    "<b>forward: gate cumsum</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 8.8 µs<br><b>share of forward + backward</b>: 0.3%<extra></extra>",
+                    "",
+                    "<b>forward: gate cumsum</b><br>GLA · H100 · FLA<br><b>device time</b>: 177.1 µs<br><b>share of forward + backward</b>: 2.9%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    184.5,
+                    null,
+                    188.0,
+                    null,
+                    286.4,
+                    null
+                ],
+                "name": "state passing",
+                "legendgroup": "state passing",
+                "showlegend": true,
+                "marker": {
+                    "color": "#1baf7a",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>forward: state passing</b><br>Linear Attention · H100 · FLA<br><b>device time</b>: 184.5 µs<br><b>share of forward + backward</b>: 8.8%<extra></extra>",
+                    "",
+                    "<b>forward: state passing</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 188.0 µs<br><b>share of forward + backward</b>: 7.3%<extra></extra>",
+                    "",
+                    "<b>forward: state passing</b><br>GLA · H100 · FLA<br><b>device time</b>: 286.4 µs<br><b>share of forward + backward</b>: 4.7%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    751.1,
+                    null
+                ],
+                "name": "intra-chunk scores",
+                "legendgroup": "intra-chunk scores",
+                "showlegend": true,
+                "marker": {
+                    "color": "#e87ba4",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "",
+                    "",
+                    "",
+                    "<b>forward: intra-chunk scores</b><br>GLA · H100 · FLA<br><b>device time</b>: 751.1 µs<br><b>share of forward + backward</b>: 12.3%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    274.2,
+                    null,
+                    289.9,
+                    null,
+                    355.3,
+                    null
+                ],
+                "name": "output",
+                "legendgroup": "output",
+                "showlegend": true,
+                "marker": {
+                    "color": "#2a78d6",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>forward: output</b><br>Linear Attention · H100 · FLA<br><b>device time</b>: 274.2 µs<br><b>share of forward + backward</b>: 13.0%<extra></extra>",
+                    "",
+                    "<b>forward: output</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 289.9 µs<br><b>share of forward + backward</b>: 11.2%<extra></extra>",
+                    "",
+                    "<b>forward: output</b><br>GLA · H100 · FLA<br><b>device time</b>: 355.3 µs<br><b>share of forward + backward</b>: 5.8%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    null,
+                    384.9,
+                    null,
+                    438.0,
+                    null,
+                    549.8
+                ],
+                "name": "FLAT fused forward",
+                "legendgroup": "FLAT fused forward",
+                "showlegend": true,
+                "marker": {
+                    "color": "#176b64",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "<b>forward: fused kernel (states + output)</b><br>Linear Attention · TPU v6e · FLAT<br><b>device time</b>: 384.9 µs<br><b>share of forward + backward</b>: 29.0%<extra></extra>",
+                    "",
+                    "<b>forward: fused kernel (states + output)</b><br>Mamba-2 · TPU v6e · FLAT<br><b>device time</b>: 438.0 µs<br><b>share of forward + backward</b>: 25.4%<extra></extra>",
+                    "",
+                    "<b>forward: fused kernel (states + output)</b><br>GLA · TPU v6e · FLAT<br><b>device time</b>: 549.8 µs<br><b>share of forward + backward</b>: 27.7%<extra></extra>"
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    40.6,
+                    null
+                ],
+                "name": "other",
+                "legendgroup": "other",
+                "showlegend": true,
+                "marker": {
+                    "color": "#6d6860",
+                    "opacity": 1.0,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "",
+                    "",
+                    "",
+                    "<b>forward: other</b><br>GLA · H100 · FLA<br><b>device time</b>: 40.6 µs<br><b>share of forward + backward</b>: 0.7%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    null,
+                    null,
+                    9.0,
+                    null,
+                    null,
+                    null
+                ],
+                "name": "gate cumsum",
+                "legendgroup": "gate cumsum",
+                "showlegend": false,
+                "marker": {
+                    "color": "#eda100",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "",
+                    "<b>backward: gate cumsum</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 9.0 µs<br><b>share of forward + backward</b>: 0.3%<extra></extra>",
+                    "",
+                    "",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    299.7,
+                    226.2,
+                    305.1,
+                    260.1,
+                    372.8,
+                    394.4
+                ],
+                "name": "state passing",
+                "legendgroup": "state passing",
+                "showlegend": false,
+                "marker": {
+                    "color": "#1baf7a",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>backward: state passing</b><br>Linear Attention · H100 · FLA<br><b>device time</b>: 299.7 µs<br><b>share of forward + backward</b>: 14.2%<extra></extra>",
+                    "<b>backward: state passing</b><br>Linear Attention · TPU v6e · FLAT<br><b>device time</b>: 226.2 µs<br><b>share of forward + backward</b>: 17.0%<extra></extra>",
+                    "<b>backward: state passing</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 305.1 µs<br><b>share of forward + backward</b>: 11.8%<extra></extra>",
+                    "<b>backward: state passing</b><br>Mamba-2 · TPU v6e · FLAT<br><b>device time</b>: 260.1 µs<br><b>share of forward + backward</b>: 15.1%<extra></extra>",
+                    "<b>backward: state passing</b><br>GLA · H100 · FLA<br><b>device time</b>: 372.8 µs<br><b>share of forward + backward</b>: 6.1%<extra></extra>",
+                    "<b>backward: state passing</b><br>GLA · TPU v6e · FLAT<br><b>device time</b>: 394.4 µs<br><b>share of forward + backward</b>: 19.9%<extra></extra>"
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    298.4,
+                    null,
+                    298.0,
+                    null,
+                    373.2,
+                    null
+                ],
+                "name": "state gradient",
+                "legendgroup": "state gradient",
+                "showlegend": true,
+                "marker": {
+                    "color": "#4a3aa7",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>backward: state gradient</b><br>Linear Attention · H100 · FLA<br><b>device time</b>: 298.4 µs<br><b>share of forward + backward</b>: 14.2%<extra></extra>",
+                    "",
+                    "<b>backward: state gradient</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 298.0 µs<br><b>share of forward + backward</b>: 11.6%<extra></extra>",
+                    "",
+                    "<b>backward: state gradient</b><br>GLA · H100 · FLA<br><b>device time</b>: 373.2 µs<br><b>share of forward + backward</b>: 6.1%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    1047.2,
+                    null,
+                    1469.6,
+                    null,
+                    3484.1,
+                    null
+                ],
+                "name": "q/k/v/gate gradients",
+                "legendgroup": "q/k/v/gate gradients",
+                "showlegend": true,
+                "marker": {
+                    "color": "#eb6834",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>backward: q/k/v/gate gradients</b><br>Linear Attention · H100 · FLA<br><b>device time</b>: 1,047.2 µs<br><b>share of forward + backward</b>: 49.7%<extra></extra>",
+                    "",
+                    "<b>backward: q/k/v/gate gradients</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 1,469.6 µs<br><b>share of forward + backward</b>: 57.0%<extra></extra>",
+                    "",
+                    "<b>backward: q/k/v/gate gradients</b><br>GLA · H100 · FLA<br><b>device time</b>: 3,484.1 µs<br><b>share of forward + backward</b>: 57.1%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    null,
+                    716.1,
+                    null,
+                    1023.9,
+                    null,
+                    1037.7
+                ],
+                "name": "FLAT fused gradient",
+                "legendgroup": "FLAT fused gradient",
+                "showlegend": true,
+                "marker": {
+                    "color": "#2f6f4f",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "",
+                    "<b>backward: fused gradient kernel (state gradient + q/k/v/gate gradients)</b><br>Linear Attention · TPU v6e · FLAT<br><b>device time</b>: 716.1 µs<br><b>share of forward + backward</b>: 54.0%<extra></extra>",
+                    "",
+                    "<b>backward: fused gradient kernel (state gradient + q/k/v/gate gradients)</b><br>Mamba-2 · TPU v6e · FLAT<br><b>device time</b>: 1,023.9 µs<br><b>share of forward + backward</b>: 59.5%<extra></extra>",
+                    "",
+                    "<b>backward: fused gradient kernel (state gradient + q/k/v/gate gradients)</b><br>GLA · TPU v6e · FLAT<br><b>device time</b>: 1,037.7 µs<br><b>share of forward + backward</b>: 52.4%<extra></extra>"
+                ]
+            },
+            {
+                "type": "bar",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    3.1,
+                    null,
+                    10.9,
+                    null,
+                    264.9,
+                    null
+                ],
+                "name": "other",
+                "legendgroup": "other",
+                "showlegend": false,
+                "marker": {
+                    "color": "#6d6860",
+                    "opacity": 0.45,
+                    "line": {
+                        "width": 0
+                    }
+                },
+                "hovertemplate": [
+                    "<b>backward: other</b><br>Linear Attention · H100 · FLA<br><b>device time</b>: 3.1 µs<br><b>share of forward + backward</b>: 0.1%<extra></extra>",
+                    "",
+                    "<b>backward: other</b><br>Mamba-2 · H100 · FLA<br><b>device time</b>: 10.9 µs<br><b>share of forward + backward</b>: 0.4%<extra></extra>",
+                    "",
+                    "<b>backward: other</b><br>GLA · H100 · FLA<br><b>device time</b>: 264.9 µs<br><b>share of forward + backward</b>: 4.3%<extra></extra>",
+                    ""
+                ]
+            },
+            {
+                "type": "scatter",
+                "mode": "text",
+                "x": [
+                    [
+                        "Linear Attention",
+                        "Linear Attention",
+                        "Mamba-2",
+                        "Mamba-2",
+                        "GLA",
+                        "GLA"
+                    ],
+                    [
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT",
+                        "H100 · FLA",
+                        "TPU v6e · FLAT"
+                    ]
+                ],
+                "y": [
+                    2107.1195999999995,
+                    1327.2,
+                    2579.267100000002,
+                    1722.0,
+                    6105.462850000002,
+                    1981.9
+                ],
+                "text": [
+                    "2,107 µs",
+                    "1,327 µs",
+                    "2,579 µs",
+                    "1,722 µs",
+                    "6,105 µs",
+                    "1,982 µs"
+                ],
+                "textposition": "top center",
+                "textfont": {
+                    "size": 10,
+                    "color": "#3d3a33"
+                },
+                "hoverinfo": "skip",
+                "showlegend": false
+            }
+        ],
+        "layout": {
+            "barmode": "stack",
+            "bargap": 0.3,
+            "showlegend": true,
+            "legend": {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "left",
+                "x": 0,
+                "font": {
+                    "size": 10
+                }
+            },
+            "yaxis": {
+                "title": "device time, forward + backward (µs)",
+                "range": [
+                    0,
+                    6838.118392000002
+                ]
+            },
+            "xaxis": {
+                "tickfont": {
+                    "size": 10
+                }
+            },
+            "margin": {
+                "b": 72,
+                "l": 72,
+                "t": 64
+            }
+        }
+    }
+}

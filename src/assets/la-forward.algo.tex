@@ -1,0 +1,17 @@
+\caption{Chunkwise Gated Linear Attention forward: one Pallas program (one batch element).}
+\begin{algorithmic}
+\REQUIRE $\mathbf{Q}, \mathbf{K} \in \mathbb{R}^{S \times NK}$, $\mathbf{V} \in \mathbb{R}^{S \times NV}$ in bf16 (heads side by side in lanes), the forget gate $\log \boldsymbol f \in \mathbb{R}^{S \times NK}$, the initial state $\mathbf{H}_0$, the output scale $\alpha$
+\ENSURE $\mathbf{Y} \in \mathbb{R}^{S \times NV}$, the final state $\mathbf{H}_S$
+\STATE load $\mathbf{H}_0$ \COMMENT{fp32 $(N, K, V)$ VMEM scratch holding $\mathbf{H}_{iC}$, alive for the whole sequence}
+\FOR{chunk $i = 0, \ldots, S/C - 1$ (sequential; chunk $i + 1$ is copied into VMEM while chunk $i$ computes)}
+\FOR{each group of $G$ heads (one batched MXU dot per product)}
+\STATE load $\mathbf{Q}_{[i]}, \mathbf{K}_{[i]}, \mathbf{V}_{[i]}, \log \boldsymbol f_{[i]}$ of the group \COMMENT{128-lane column slices of the chunk's block}
+\STATE $\dfrac{\boldsymbol F_{[i]}}{F_{iC}} \gets \exp\left(\mathbf{M}_C \log \boldsymbol f_{[i]}\right)$ \COMMENT{chunk-local prefix sum as a triangular matmul}
+\STATE $\mathbf{P} \gets \left(\mathbf{Q}_{[i]} \odot \dfrac{\boldsymbol F_{[i]}}{F_{iC}}\right)\left(\mathbf{K}_{[i]} \odot \dfrac{F_{iC}}{\boldsymbol F_{[i]}}\right)^\top$ \COMMENT{the decay folded into the operands}
+\STATE $\mathbf{P} \gets \mathbf{P} \odot \mathbf{M}_C$, cast to bf16 \COMMENT{causal mask}
+\STATE $\mathbf{Y}_{[i]} \gets \mathbf{P} \mathbf{V}_{[i]} + \left(\mathbf{Q}_{[i]} \odot \dfrac{\boldsymbol F_{[i]}}{F_{iC}}\right) \mathbf{H}_{iC}$
+\STATE $\mathbf{H}_{(i+1)C} \gets \mathrm{diag}\!\left(\dfrac{F_{(i+1)C}}{F_{iC}}\right) \mathbf{H}_{iC} + \left(\mathbf{K}_{[i]} \odot \dfrac{F_{(i+1)C}}{\boldsymbol F_{[i]}}\right)^\top \mathbf{V}_{[i]}$ \COMMENT{overwrites the scratch in place}
+\ENDFOR
+\ENDFOR
+\RETURN $\mathbf{Y}$, $\mathbf{H}_S$
+\end{algorithmic}

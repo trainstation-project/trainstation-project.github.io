@@ -1,0 +1,20 @@
+---
+import { parseAlgorithmic } from '../plugins/algorithmic-latex.mjs';
+
+interface Props {
+  id: string;
+  source: string;
+}
+
+const { id, source } = Astro.props;
+const { captionHtml, bodyHtml } = parseAlgorithmic(source);
+---
+
+<!-- Laid out like LaTeX's `algorithm` float: a thick rule, the caption with a
+     bold "Algorithm N" label, a thin rule, the algorithmic body, a thick rule.
+     N is filled in by the page-level numbering script in PostLayout.astro,
+     which also resolves every <AlgRef> to it. -->
+<div class="algorithm" id={id}>
+  <div class="algorithm-caption"><span class="algorithm-label">Algorithm ?</span> <Fragment set:html={captionHtml} /></div>
+  <div class="algorithm-body" set:html={bodyHtml} />
+</div>

@@ -37,8 +37,12 @@ const watchBib = {
 // https://astro.build/config
 export default defineConfig({
   site: 'https://trainstation-project.github.io',
-  // the FLAT post was first published under its old slug
-  redirects: { '/blog/depthwise-causal-conv-on-tpu': '/blog/flat' },
+  redirects: {
+    // the FLAT post was first published under its old slug
+    '/blog/depthwise-causal-conv-on-tpu': '/blog/flat',
+    // the tokenizer study was first published as the placeholder some-doc
+    '/documentation/some-doc': '/documentation/tokenizer-study',
+  },
   integrations: [react(), mdx()],
   vite: { plugins: [watchBib] },
   markdown: {

@@ -23,6 +23,13 @@ frontmatter fields). `##`/`###` headings populate the table of contents.
 - **Resource links:** list `links` (`label`, `href`, optional `icon`) in the
   frontmatter to show buttons under the byline.
 
+## Writing documentation
+
+Documentation pages work exactly like posts (same frontmatter, components and
+layout) but live in `src/content/documentation/` and are served at
+`/documentation/<filename>/`, with an index at `/documentation/`. See
+`some-doc.mdx` for an example.
+
 ## Deploying
 
 Every push to `main` builds the site and publishes it to

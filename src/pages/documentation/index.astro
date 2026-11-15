@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../site.config';
+import { docSections, sectionHref, byOrder } from '../../doc-sections';
+
+const docs = await getCollection('documentation', ({ data }) => !data.draft);
+
+const chapters = docSections.map((section, i) => ({
+  ...section,
+  number: i + 1,
+  docs: docs.filter((d) => d.data.section === section.slug).sort(byOrder),
+}));
+---
+
+<BaseLayout title={`Documentation | ${site.brand}`} description={`Documentation for ${site.brand}.`}>
+  <div class="home-shell">
+    <section class="home-hero">
+      <h1>Documentation</h1>
+    </section>
+
+    <nav class="book-toc" aria-label="Contents">
+      <p class="book-toc-label">Contents</p>
+      <ol class="book-chapters">
+        {chapters.map((ch) => (
+          <li class="book-chapter">
+            <a class="book-chapter-title" href={sectionHref(ch.slug)}>
+              <span class="book-num">{ch.number}</span>
+              <span class="book-title">{ch.title}</span>
+              <span class="book-leader" aria-hidden="true"></span>
+              <span class="book-count">{ch.docs.length}</span>
+            </a>
+            {ch.docs.length > 0 && (
+              <ol class="book-entries">
+                {ch.docs.map((doc, j) => (
+                  <li>
+                    <a href={`/documentation/${doc.id}/`}>
+                      <span class="book-num">{ch.number}.{j + 1}</span>
+                      <span class="book-title">{doc.data.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  </div>
+</BaseLayout>

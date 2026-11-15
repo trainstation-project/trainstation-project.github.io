@@ -25,10 +25,19 @@ frontmatter fields). `##`/`###` headings populate the table of contents.
 
 ## Writing documentation
 
-Documentation pages work exactly like posts (same frontmatter, components and
-layout) but live in `src/content/documentation/` and are served at
-`/documentation/<filename>/`, with an index at `/documentation/`. See
-`some-doc.mdx` for an example.
+Documentation pages work like posts (same frontmatter, components and layout)
+but live in `src/content/documentation/`, with a book-style contents page at
+`/documentation/`.
+
+- **One doc, one file or folder:** a doc is either `name.mdx` or a folder
+  `name/index.mdx`, served at `/documentation/<name>/`. A doc with images must
+  be a folder, and its images live inside it; the build fails on any image that
+  is remote or outside the doc's folder.
+- **Sections:** every doc sets `section: '<slug>'` (and optionally `order:` for
+  its position) in its frontmatter. Sections, in reading order, are listed in
+  `src/doc-sections.ts`; each gets a page at `/documentation/sections/<slug>/`.
+
+See `tokenizer-study/` for an example.
 
 ## Deploying
 

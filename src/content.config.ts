@@ -44,7 +44,9 @@ const blog = defineCollection({
 });
 
 const documentation = defineCollection({
-  loader: glob({ pattern: '**/*.mdx', base: './src/content/documentation' }),
+  // a doc is either a single file (name.mdx) or a folder (name/index.mdx) that
+  // also holds the doc's images; other .mdx files inside a folder aren't docs
+  loader: glob({ pattern: ['*.mdx', '*/index.mdx'], base: './src/content/documentation' }),
   schema: (ctx: SchemaContext) =>
     postSchema(ctx).extend({
       // which section of the book this document belongs to (see src/doc-sections.ts)

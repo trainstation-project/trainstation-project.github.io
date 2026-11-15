@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeCitationStyle from './src/plugins/rehype-citation-style.mjs';
 import remarkBibtexRefs from './src/plugins/remark-bibtex-refs.mjs';
+import remarkLocalDocImages from './src/plugins/remark-local-doc-images.mjs';
 import { fileURLToPath } from 'node:url';
 import { readdirSync, utimesSync } from 'node:fs';
 import path from 'node:path';
@@ -25,8 +26,10 @@ const watchBib = {
     server.watcher.on('change', (file) => {
       if (path.resolve(file) !== bibPath) return;
       const now = new Date();
+      // docs may be single files or folders (name/index.mdx), so look one level down
       for (const dir of [path.dirname(bibPath), docsDir])
-        for (const f of readdirSync(dir)) if (/\.mdx?$/.test(f)) utimesSync(path.join(dir, f), now, now);
+        for (const f of readdirSync(dir, { recursive: true }))
+          if (/\.mdx?$/.test(String(f))) utimesSync(path.join(dir, String(f)), now, now);
     });
   },
 };
@@ -40,7 +43,12 @@ export default defineConfig({
   vite: { plugins: [watchBib] },
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkMath, remarkGfm, () => remarkBibtexRefs(bibPath)],
+      remarkPlugins: [
+        remarkMath,
+        remarkGfm,
+        () => remarkBibtexRefs(bibPath),
+        () => remarkLocalDocImages(docsDir),
+      ],
       rehypePlugins: [rehypeKatex, rehypeCitationStyle],
       remarkRehype: {
         footnoteLabel: 'References',

@@ -8,24 +8,28 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeCitationStyle from './src/plugins/rehype-citation-style.mjs';
 import remarkBibtexRefs from './src/plugins/remark-bibtex-refs.mjs';
+import remarkLocalDocImages from './src/plugins/remark-local-doc-images.mjs';
 import { fileURLToPath } from 'node:url';
 import { readdirSync, utimesSync } from 'node:fs';
 import path from 'node:path';
 
 const bibPath = fileURLToPath(new URL('./src/content/blog/references.bib', import.meta.url));
+const docsDir = fileURLToPath(new URL('./src/content/documentation', import.meta.url));
 
 // remark-bibtex-refs reads the .bib while compiling a post, but Vite doesn't
 // know the post depends on it, so an edit to the .bib alone kept serving the
-// cached page. Watch it and touch every post so they recompile.
+// cached page. Watch it and touch every post and doc so they recompile.
 const watchBib = {
   name: 'watch-bib',
   configureServer(server) {
     server.watcher.add(bibPath);
     server.watcher.on('change', (file) => {
       if (path.resolve(file) !== bibPath) return;
-      const dir = path.dirname(bibPath);
       const now = new Date();
-      for (const f of readdirSync(dir)) if (/\.mdx?$/.test(f)) utimesSync(path.join(dir, f), now, now);
+      // docs may be single files or folders (name/index.mdx), so look one level down
+      for (const dir of [path.dirname(bibPath), docsDir])
+        for (const f of readdirSync(dir, { recursive: true }))
+          if (/\.mdx?$/.test(String(f))) utimesSync(path.join(dir, String(f)), now, now);
     });
   },
 };
@@ -39,7 +43,12 @@ export default defineConfig({
   vite: { plugins: [watchBib] },
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkMath, remarkGfm, () => remarkBibtexRefs(bibPath)],
+      remarkPlugins: [
+        remarkMath,
+        remarkGfm,
+        () => remarkBibtexRefs(bibPath),
+        () => remarkLocalDocImages(docsDir),
+      ],
       rehypePlugins: [rehypeKatex, rehypeCitationStyle],
       remarkRehype: {
         footnoteLabel: 'References',

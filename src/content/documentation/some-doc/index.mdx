@@ -1,0 +1,69 @@
+---
+title: 'Initial Tokenizer Study'
+description: 'Compression, code-syntax alignment, identifier fragmentation and number handling across DeepSeek-V4, GLM-5, Kimi K3, Marin, Qwen3.8 and Beam 1.0 tokenizers.'
+section: 'tokenization'
+order: 1
+---
+
+import { Image } from 'astro:assets';
+import Figure from '../../../components/Figure.astro';
+import FigRef from '../../../components/FigRef.astro';
+
+import compressionAll from './all_compression_all_text.png';
+import compressionBySource from './all_compression_by_source.png';
+import astAlignment from './all_code_ast_alignment.png';
+import astPerLanguage from './all_code_ast_full_per_language.png';
+import identifierFragmentation from './all_identifier_fragmentation.png';
+import numericConsistency from './all_numeric_magnitude_consistency.png';
+
+# Setup
+
+We compare the tokenizers of DeepSeek-V4, GLM-5, Kimi K3, Marin, Qwen3.8 and Beam 1.0. Every plot uses the same encoding:
+
+- **Solid** marks are each tokenizer as shipped. Qwen3.8 and Beam 1.0 already split digits singly.
+- **Hatched** marks are a single-digit (1-digit) variant of DeepSeek-V4, GLM-5, Kimi K3 and Marin.
+- **Cross-hatched, outlined** marks are Marin with single digits and newline splitting.
+
+# Compression
+
+Compression is measured in bytes per token; higher is better.
+
+<Figure id="fig-compression-all">
+  <Image src={compressionAll} width={1349} alt="Dot plot of bytes per token on all text pooled. As shipped, DeepSeek-V4, GLM-5, Kimi K3 and Marin score 4.468 to 4.500; their 1-digit variants score 4.351 to 4.384; Marin with 1-digit and newline split scores 4.287, Qwen3.8 4.303 and Beam 1.0 4.380." />
+  <Fragment slot="caption"><strong>Compression on all text.</strong> Bytes per token with all text pooled. The axis does not start at 0.</Fragment>
+</Figure>
+
+<FigRef id="fig-compression-by-source" full /> breaks the same measure down by data source.
+
+<Figure id="fig-compression-by-source" wide>
+  <Image src={compressionBySource} width={2080} alt="Six dot plots of bytes per token, one per data source: common_crawl (75.4% of bytes), olmocr_pdfs (12.7%), stack_edu (7.5%), finemath (2.5%), arxiv (1.0%) and wiki (1.0%), each comparing the same eleven tokenizer variants." />
+  <Fragment slot="caption"><strong>Compression by data source.</strong> Bytes per token for each source, with its share of total bytes in the panel title. Each panel has its own zoomed axis, which does not start at 0.</Fragment>
+</Figure>
+
+# Code syntax alignment
+
+Alignment is the share of syntax spans in parsed code whose boundaries fall on token boundaries; higher is better.
+
+<Figure id="fig-ast-alignment" wide>
+  <Image src={astAlignment} width={2080} alt="Three bar charts of alignment rate across 12 languages: fully aligned, start-aligned and end-aligned. Fully aligned ranges from 0.502 to 0.584, with Marin (1-digit, newline split) and Qwen3.8 highest at 0.584; end-aligned is 0.805 for both of those and 0.674 to 0.691 for the rest." />
+  <Fragment slot="caption"><strong>Code AST boundary alignment.</strong> Share of syntax spans whose start and end, start only, or end only fall on token boundaries, pooled over 12 languages.</Fragment>
+</Figure>
+
+<Figure id="fig-ast-per-language" wide>
+  <Image src={astPerLanguage} width={2080} alt="Twelve bar charts of full-alignment rate, one per language: Bash, C, C++, C#, Go, Java, JavaScript, PHP, Python, Ruby, Rust and TypeScript, each comparing the same eleven tokenizer variants." />
+  <Fragment slot="caption"><strong>Full alignment per language.</strong> The fully aligned rate from <FigRef id="fig-ast-alignment" />, split by language.</Fragment>
+</Figure>
+
+# Identifier fragmentation
+
+<Figure id="fig-identifier-fragmentation" wide>
+  <Image src={identifierFragmentation} width={2080} alt="Left: bar chart of the share of identifiers split into more than one token, from 0.355 for Qwen3.8 to 0.428 for DeepSeek-V4. Right: dot plot of mean tokens per identifier, from 1.581 for GLM-5 and Marin to 1.784 for DeepSeek-V4 (1-digit)." />
+  <Fragment slot="caption"><strong>Identifier fragmentation.</strong> Left: share of identifiers split into more than one token. Right: mean tokens per identifier; this axis does not start at 0. Lower is better for both.</Fragment>
+</Figure>
+
+# Numbers
+
+<Figure id="fig-numeric-consistency" wide>
+  <Image src={numericConsistency} width={2080} alt="Left: line chart of tokens per digit by number length from 1 to 10+ digits. Every 1-digit variant, Qwen3.8 and Beam 1.0 stay at 1.0; DeepSeek-V4, Kimi K3 and Marin fall to between 0.333 and 0.5; GLM-5 sits between 0.42 and 0.62. Right: coefficient of variation of tokens per digit, 0.417 for DeepSeek-V4, Kimi K3 and Marin, 0.256 for GLM-5 and 0 for all others." />
+  <Fragment slot="caption"><strong>Numeric magnitude consistency.</strong> Left: tokens per digit by number length; a flat line means numbers of every length are split the same way. Right: coefficient of variation of tokens per digit across the 10 length buckets; lower is better.</Fragment>
+</Figure>

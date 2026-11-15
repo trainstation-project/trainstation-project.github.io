@@ -3,29 +3,47 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../site.config';
 
-const posts = await getCollection('blog', ({ data }) => !data.draft);
+const notDraft = ({ data }: { data: { draft?: boolean } }) => !data.draft;
+const posts = await getCollection('blog', notDraft);
+const docs = await getCollection('documentation', notDraft);
+
+const sections = [
+  {
+    title: 'Blog',
+    href: '/blog/',
+    description: 'Research write-ups, kernels and experiments.',
+    count: posts.length,
+    unit: 'post',
+  },
+  {
+    title: 'Documentation',
+    href: '/documentation/',
+    description: 'Guides and reference for the project.',
+    count: docs.length,
+    unit: 'page',
+  },
+];
 ---
 
 <BaseLayout title={site.brand} description={site.tagline}>
   <div class="home-shell">
     <section class="home-hero">
       <h1>{site.brand}</h1>
-      <p>{site.tagline}</p>
+      {site.tagline && <p>{site.tagline}</p>}
     </section>
 
-    {posts.length === 0 ? (
-      <p class="empty-state">No posts yet.</p>
-    ) : (
-      <ul class="post-list">
-        {posts.map((post) => (
-          <li>
-            <a href={`/blog/${post.id}/`}>
-              <h2>{post.data.title}</h2>
-              <p class="post-desc">{post.data.description}</p>
-            </a>
-          </li>
-        ))}
-      </ul>
-    )}
+    <ul class="section-grid">
+      {sections.map((s) => (
+        <li>
+          <a class="section-card" href={s.href}>
+            <h2>{s.title}</h2>
+            <p class="section-desc">{s.description}</p>
+            <span class="section-meta">
+              {s.count} {s.unit}{s.count === 1 ? '' : 's'} <span aria-hidden="true">→</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
   </div>
 </BaseLayout>

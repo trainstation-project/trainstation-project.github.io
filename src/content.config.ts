@@ -1,9 +1,10 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection, z, type SchemaContext } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { docSectionSlugs } from './doc-sections';
 
-const blog = defineCollection({
-  loader: glob({ pattern: '**/*.mdx', base: './src/content/blog' }),
-  schema: ({ image }) => z.object({
+// Blog posts and documentation pages share one frontmatter schema and the
+// same PostLayout; they differ only in where they live and their URL prefix.
+const postSchema = ({ image }: SchemaContext) => z.object({
     title: z.string(),
     subtitle: z.string().optional(),
     description: z.string(),
@@ -35,7 +36,24 @@ const blog = defineCollection({
         })
       )
       .optional(),
-  }),
+  });
+
+const blog = defineCollection({
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/blog' }),
+  schema: postSchema,
 });
 
-export const collections = { blog };
+const documentation = defineCollection({
+  // a doc is either a single file (name.mdx) or a folder (name/index.mdx) that
+  // also holds the doc's images; other .mdx files inside a folder aren't docs
+  loader: glob({ pattern: ['*.mdx', '*/index.mdx'], base: './src/content/documentation' }),
+  schema: (ctx: SchemaContext) =>
+    postSchema(ctx).extend({
+      // which section of the book this document belongs to (see src/doc-sections.ts)
+      section: z.enum(docSectionSlugs),
+      // position within its section; documents without one come last, by title
+      order: z.number().optional(),
+    }),
+});
+
+export const collections = { blog, documentation };

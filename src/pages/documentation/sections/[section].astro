@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { site } from '../../../site.config';
+import { docSections, byOrder } from '../../../doc-sections';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('documentation', ({ data }) => !data.draft);
+  return docSections.map((section, i) => ({
+    params: { section: section.slug },
+    props: {
+      section,
+      number: i + 1,
+      docs: docs.filter((d) => d.data.section === section.slug).sort(byOrder),
+    },
+  }));
+}
+
+const { section, number, docs } = Astro.props;
+---
+
+<BaseLayout
+  title={`${number}. ${section.title} | Documentation | ${site.brand}`}
+  description={section.description}
+>
+  <div class="home-shell">
+    <section class="home-hero">
+      <a class="book-back" href="/documentation/">← Contents</a>
+      <p class="book-chapter-kicker">Section {number}</p>
+      <h1>{section.title}</h1>
+      {section.description && <p>{section.description}</p>}
+    </section>
+
+    {docs.length === 0 ? (
+      <p class="empty-state">No documents in this section yet.</p>
+    ) : (
+      <ul class="post-list">
+        {docs.map((doc, j) => (
+          <li>
+            <a href={`/documentation/${doc.id}/`}>
+              <span class="book-entry-num">{number}.{j + 1}</span>
+              <h2>{doc.data.title}</h2>
+              <p class="post-desc">{doc.data.description}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

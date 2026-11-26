@@ -1,0 +1,102 @@
+/* Coord-check figures: SP is orange, muP is blue (dataviz default categorical
+   slots 2 and 1). Each mode's training steps are a light->dark ramp of its hue
+   on the light theme and dark->light on the dark theme. */
+.cc {
+  --cc-sp: #eb6834;
+  --cc-mup: #2a78d6;
+  --cc-sp-0: #f5b394; --cc-sp-1: #f19366; --cc-sp-2: #eb6834;
+  --cc-sp-3: #c9501f; --cc-sp-4: #a23f17; --cc-sp-5: #7a2e10;
+  --cc-mup-0: #86b6ef; --cc-mup-1: #5598e7; --cc-mup-2: #2a78d6;
+  --cc-mup-3: #1c5cab; --cc-mup-4: #184f95; --cc-mup-5: #0d366b;
+  --cc-grid: #eee8de;
+  --cc-chip-flat: #e6f0fb;
+  --cc-chip-grow: #fde9e0;
+  --cc-mono: "SF Mono", "Monaco", "Consolas", monospace;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .cc {
+    --cc-sp: #d95926;
+    --cc-mup: #3987e5;
+    --cc-sp-0: #a23f17; --cc-sp-1: #c24c1d; --cc-sp-2: #d95926;
+    --cc-sp-3: #e7794b; --cc-sp-4: #f09a72; --cc-sp-5: #f6c0a5;
+    --cc-mup-0: #184f95; --cc-mup-1: #1c5cab; --cc-mup-2: #2a78d6;
+    --cc-mup-3: #5598e7; --cc-mup-4: #86b6ef; --cc-mup-5: #b7d3f6;
+    --cc-grid: #2a2720;
+    --cc-chip-flat: #172a42;
+    --cc-chip-grow: #3a2117;
+  }
+}
+:root[data-theme="dark"] .cc {
+  --cc-sp: #d95926;
+  --cc-mup: #3987e5;
+  --cc-sp-0: #a23f17; --cc-sp-1: #c24c1d; --cc-sp-2: #d95926;
+  --cc-sp-3: #e7794b; --cc-sp-4: #f09a72; --cc-sp-5: #f6c0a5;
+  --cc-mup-0: #184f95; --cc-mup-1: #1c5cab; --cc-mup-2: #2a78d6;
+  --cc-mup-3: #5598e7; --cc-mup-4: #86b6ef; --cc-mup-5: #b7d3f6;
+  --cc-grid: #2a2720;
+  --cc-chip-flat: #172a42;
+  --cc-chip-grow: #3a2117;
+}
+
+.cc svg text { font-family: var(--cc-mono); font-size: 10px; fill: var(--muted); }
+.cc .cc-key { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.cc .cc-key i, .cc .cc-ramp i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+
+.cc-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-bottom: 14px; font-size: 0.85rem; color: var(--muted); }
+.cc-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.cc-seg button { font: inherit; font-size: 0.8rem; padding: 4px 10px; background: var(--paper); color: var(--muted); border: 0; cursor: pointer; }
+.cc-seg button + button { border-left: 1px solid var(--line); }
+.cc-seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.cc-seg button:focus-visible, .cc-toggle input:focus-visible { outline: 2px solid var(--cc-mup); outline-offset: 2px; }
+.cc-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.cc-ramp { display: inline-flex; gap: 2px; align-items: center; }
+.cc-mono { font-family: var(--cc-mono); font-size: 0.75rem; }
+
+.cc-table-scroll { overflow-x: auto; }
+/* Higher specificity than the site's article table rules, which give the
+   first table on a page a fixed three-column layout. */
+.article-content .cc table.cc-table {
+  table-layout: auto; width: 100%; margin: 0; font-size: 0.85rem;
+  font-variant-numeric: tabular-nums; border: 0; background: transparent; box-shadow: none;
+}
+.article-content .cc table.cc-table tr > th,
+.article-content .cc table.cc-table tr > td {
+  width: auto; text-align: left; padding: 4px 8px; border: 0;
+  border-bottom: 1px solid var(--cc-grid); white-space: nowrap;
+  background: transparent; vertical-align: middle;
+}
+.article-content .cc table.cc-table tr > th {
+  font-weight: 600; color: var(--muted); font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.article-content .cc table.cc-table tr > td.cc-num { text-align: right; font-family: var(--cc-mono); font-size: 0.8rem; }
+.article-content .cc table.cc-table tr > td.cc-strip { width: 220px; padding-block: 0; }
+.article-content .cc table.cc-table tr.cc-group > td {
+  color: var(--muted); font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.08em; padding-top: 12px; border-bottom: 0;
+}
+
+.cc-groups { display: grid; gap: 28px; }
+.cc-acts { display: grid; gap: 22px; }
+.cc-group-title { display: grid; gap: 2px; padding-top: 8px; border-top: 1px solid var(--line); }
+.cc-eyebrow { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.cc-group-title p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.cc-act { display: grid; gap: 6px; }
+.cc-act-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.cc-act-head h4 { margin: 0; font-family: var(--cc-mono); font-weight: 500; font-size: 0.88rem; }
+.cc-chip { font-family: var(--cc-mono); font-size: 0.72rem; padding: 1px 7px; border-radius: 99px; color: var(--ink); }
+.cc-chip.flat { background: var(--cc-chip-flat); }
+.cc-chip.grow { background: var(--cc-chip-grow); }
+.cc-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .cc-pair { grid-template-columns: minmax(0, 1fr); } }
+.cc-panel { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 8px 4px; position: relative; min-width: 0; }
+.cc-panel-label { position: absolute; top: 8px; left: 52px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.cc-panel svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+
+.cc-tip { position: fixed; pointer-events: none; z-index: 50; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; box-shadow: var(--shadow); min-width: 160px; color: var(--ink); }
+.cc-tip .cc-tip-head { font-weight: 600; margin-bottom: 4px; }
+.cc-tip .cc-tip-row { display: flex; justify-content: space-between; gap: 14px; font-family: var(--cc-mono); font-size: 0.74rem; color: var(--muted); }
+.cc-tip .cc-tip-row b { color: var(--ink); font-weight: 500; }
+.cc-tip .cc-sw { width: 10px; height: 3px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: middle; }

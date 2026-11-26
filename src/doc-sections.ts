@@ -7,6 +7,11 @@ export const docSections = [
     title: 'Tokenization',
     description: 'Turning raw text into the token sequences a model trains on.',
   },
+  {
+    slug: 'scaling',
+    title: 'Scaling',
+    description: 'Parameterizing models so that training behaves the same across widths.',
+  },
 ] as const;
 
 export type DocSectionSlug = (typeof docSections)[number]['slug'];

@@ -1,0 +1,35 @@
+---
+title: 'μP'
+description: 'Activation scale against width for a 2-layer dense gpt_trainstation model, trained with and without muP.'
+section: 'scaling'
+order: 1
+authors:
+  - name: 'Mayank Mishra'
+    url: 'mailto:mayank_mishra@berkeley.edu'
+---
+
+import Figure from '../../../components/Figure.astro';
+import FigRef from '../../../components/FigRef.astro';
+import { CoordExponents, CoordPanels } from '../../../components/figures/CoordCheck';
+
+# Setup
+
+We train the same 2-layer dense GQA model (gpt_trainstation in torchtitan) for 20 AdamW steps at widths 128 to 4096, and record the RMS of every activation on a fixed 512-token probe sequence. Under SP (standard parameterization) the activation scale grows with width as soon as training starts. Under muP it stays flat.
+
+# Growth exponents
+
+For each activation we fit the slope `p` of log RMS against log width, so that RMS ∝ width<sup>p</sup>. Zero means the activation scale doesn't depend on width.
+
+<Figure id="fig-exponents">
+  <CoordExponents client:visible />
+  <Fragment slot="caption"><strong>Growth exponent per activation.</strong> Least-squares slope over the six widths, at init or after 20 steps. At init the muP logits shrink as width<sup>−0.5</sup>, as expected from the 1/m_width output multiplier; after training they are flat.</Fragment>
+</Figure>
+
+# Every activation
+
+<FigRef id="fig-panels" full /> shows each activation's RMS against width, one line per training step, with SP and muP side by side. Hover a panel for values.
+
+<Figure id="fig-panels" wide>
+  <CoordPanels client:visible />
+  <Fragment slot="caption"><strong>Activation RMS against width.</strong> Mean over 3 seeds. Both panels in a row share a log y-axis unless each is scaled separately.</Fragment>
+</Figure>
